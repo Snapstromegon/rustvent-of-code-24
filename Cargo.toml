@@ -1,0 +1,16 @@
+[package]
+name = "rustvent-of-code-24"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+name = "rustvent"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rustvent-cli"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
