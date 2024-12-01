@@ -23,6 +23,7 @@ fn main() {
     let example = args.example;
     let solution: Option<Box<dyn Solution>> = match day {
         0 => Some(Box::new(day00::Day)),
+        1 => Some(Box::new(day01::Day)),
         _ => None,
     };
     if let Some(solution) = solution {
