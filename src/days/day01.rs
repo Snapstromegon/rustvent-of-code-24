@@ -28,9 +28,7 @@ impl Solution for Day {
     }
 
     fn part2(&self, input: &str) -> Option<usize> {
-        let (mut left, mut right) = get_left_right_lists(input);
-        left.sort();
-        right.sort();
+        let (left, right) = get_left_right_lists(input);
 
         let mut right_hash: HashMap<i64, i64> = HashMap::new();
         for r in right {
