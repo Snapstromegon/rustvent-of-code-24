@@ -13,7 +13,7 @@ fn get_reports(input: &str) -> Vec<Vec<i32>> {
         .collect()
 }
 
-fn report_okay(report: &Vec<i32>) -> Option<(usize, usize)> {
+fn report_okay(report: &[i32]) -> Option<(usize, usize)> {
     let mut increasing_okay = true;
     let mut decreasing_okay = true;
     let mut up_fail = 0;
@@ -38,9 +38,8 @@ fn report_okay(report: &Vec<i32>) -> Option<(usize, usize)> {
     }
 }
 
-fn check_is_save_part2(report: &Vec<i32>, has_skipped: bool) -> bool {
+fn check_is_save_part2(report: &[i32], has_skipped: bool) -> bool {
     let okay = report_okay(report);
-    // println!("{:?}: {:?}", report, okay);
     if okay.is_none() {
         return true;
     }
@@ -48,23 +47,22 @@ fn check_is_save_part2(report: &Vec<i32>, has_skipped: bool) -> bool {
         return false;
     }
     let (up_fail, down_fail) = okay.unwrap();
-    let mut report_clone_up = report.clone();
+    let mut report_clone_up = report.to_owned();
     report_clone_up.remove(up_fail);
-    let mut report_clone_up_before = report.clone();
+    let mut report_clone_up_before = report.to_owned();
     report_clone_up_before.remove(up_fail - 1);
-    let mut report_clone_down = report.clone();
+    let mut report_clone_down = report.to_owned();
     report_clone_down.remove(down_fail);
-    let mut report_clone_down_before = report.clone();
+    let mut report_clone_down_before = report.to_owned();
     report_clone_down_before.remove(down_fail - 1);
-    let mut report_clone_first = report.clone();
+    let mut report_clone_first = report.to_owned();
     report_clone_first.remove(0);
-    let res = (check_is_save_part2(&report_clone_first, true)
+
+    check_is_save_part2(&report_clone_first, true)
         || check_is_save_part2(&report_clone_up_before, true)
         || check_is_save_part2(&report_clone_down_before, true)
         || check_is_save_part2(&report_clone_up, true)
-        || check_is_save_part2(&report_clone_down, true));
-    // println!("{:?}: {}", report, res);
-    res
+        || check_is_save_part2(&report_clone_down, true)
 }
 
 impl Solution for Day {
