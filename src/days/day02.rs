@@ -114,7 +114,7 @@ mod tests {
     #[test]
     fn test_part2_custom1() {
         let input = "12 7 9 7 5 3";
-        assert_eq!(Day.part2(&input), Some(1));
+        assert_eq!(Day.part2(input), Some(1));
     }
 
     #[test]
