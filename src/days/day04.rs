@@ -85,9 +85,11 @@ impl Solution for Day {
         let grid: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
         for y in 0..grid.len() {
             for x in 0..grid[0].len() {
-                for dir in Direction::all() {
-                    if search_in_dir(&grid, x, y, dir, "XMAS") {
-                        res += 1;
+                if grid[y][x] == 'X' {
+                    for dir in Direction::all() {
+                        if search_in_dir(&grid, x, y, dir, "XMAS") {
+                            res += 1;
+                        }
                     }
                 }
             }
