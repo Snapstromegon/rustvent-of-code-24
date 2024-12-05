@@ -46,7 +46,7 @@ fn is_pages_sorted(pages: &[usize], rules: &HashMap<usize, Vec<usize>>) -> bool 
 fn sorted_pages(pages: &[usize], rules: &HashMap<usize, Vec<usize>>) -> Vec<usize> {
     let mut result = pages.to_vec();
 
-    result.sort_by(|a, b| {
+    result.sort_unstable_by(|a, b| {
         if let Some(after_pages) = rules.get(a) {
             if after_pages.contains(b) {
                 return Ordering::Less;
