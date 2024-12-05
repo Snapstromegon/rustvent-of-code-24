@@ -5,21 +5,20 @@ use std::{
 
 use crate::solution::Solution;
 
-fn parse_input(input: &str) -> (Vec<(usize, usize)>, Vec<Vec<usize>>) {
+fn parse_input(input: &str) -> (HashMap<usize, Vec<usize>>, Vec<Vec<usize>>) {
     let mut parts = input.split("\n\n");
     let rules_part = parts.next().unwrap();
     let pages_part = parts.next().unwrap();
 
-    let rules = rules_part
-        .lines()
-        .map(|line| {
-            let mut line_parts = line.split("|");
-            (
-                line_parts.next().unwrap().parse().unwrap(),
-                line_parts.next().unwrap().parse().unwrap(),
-            )
-        })
-        .collect();
+    let mut rules: HashMap<usize, Vec<usize>> = HashMap::new();
+
+    for rule in rules_part.lines() {
+        let mut line_parts = rule.split("|");
+        rules
+            .entry(line_parts.next().unwrap().parse().unwrap())
+            .or_default()
+            .push(line_parts.next().unwrap().parse().unwrap());
+    }
 
     let pages = pages_part
         .lines()
@@ -27,14 +26,6 @@ fn parse_input(input: &str) -> (Vec<(usize, usize)>, Vec<Vec<usize>>) {
         .collect();
 
     (rules, pages)
-}
-
-fn get_rules_map(raw_rules: &[(usize, usize)]) -> HashMap<usize, Vec<usize>> {
-    let mut rules_map: HashMap<usize, Vec<usize>> = HashMap::new();
-    for (before, after) in raw_rules {
-        rules_map.entry(*before).or_default().push(*after);
-    }
-    rules_map
 }
 
 fn middle_page(pages: &[usize]) -> usize {
@@ -79,12 +70,11 @@ pub struct Day;
 impl Solution for Day {
     fn part1(&self, input: &str) -> Option<usize> {
         let (rules, pages_list) = parse_input(input);
-        let rules_map = get_rules_map(&rules);
 
         Some(
             pages_list
                 .iter()
-                .filter(|pages| is_pages_sorted(pages, &rules_map))
+                .filter(|pages| is_pages_sorted(pages, &rules))
                 .map(|pages| middle_page(pages))
                 .sum(),
         )
@@ -92,13 +82,12 @@ impl Solution for Day {
 
     fn part2(&self, input: &str) -> Option<usize> {
         let (rules, pages_list) = parse_input(input);
-        let rules_map = get_rules_map(&rules);
 
         Some(
             pages_list
                 .iter()
-                .filter(|pages| !is_pages_sorted(pages, &rules_map))
-                .map(|pages| sorted_pages(pages, &rules_map))
+                .filter(|pages| !is_pages_sorted(pages, &rules))
+                .map(|pages| sorted_pages(pages, &rules))
                 .map(|pages| middle_page(&pages))
                 .sum(),
         )
