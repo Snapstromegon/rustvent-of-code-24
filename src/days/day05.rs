@@ -1,7 +1,4 @@
-use std::{
-    cmp::Ordering,
-    collections::{HashMap, HashSet},
-};
+use std::{cmp::Ordering, collections::HashMap};
 
 use crate::solution::Solution;
 
@@ -33,14 +30,15 @@ fn middle_page(pages: &[usize]) -> usize {
 }
 
 fn is_pages_sorted(pages: &[usize], rules: &HashMap<usize, Vec<usize>>) -> bool {
-    let mut seen = HashSet::new();
+    // we know that numbers are always two digits
+    let mut seen = [false; 100];
     for page in pages {
         for must_be_after in rules.get(page).unwrap_or(&Vec::new()) {
-            if seen.contains(must_be_after) {
+            if seen[*must_be_after] {
                 return false;
             }
         }
-        seen.insert(page);
+        seen[*page] = true;
     }
     true
 }
