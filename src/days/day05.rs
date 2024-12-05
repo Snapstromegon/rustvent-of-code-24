@@ -28,7 +28,7 @@ fn middle_page(pages: &[usize]) -> usize {
     pages[pages.len() / 2]
 }
 
-fn is_pages_sorted(pages: &[usize], rules: &Vec<Vec<usize>>) -> bool {
+fn is_pages_sorted(pages: &[usize], rules: &[Vec<usize>]) -> bool {
     // we know that numbers are always two digits
     let mut seen = [false; 100];
     for page in pages {
@@ -42,7 +42,7 @@ fn is_pages_sorted(pages: &[usize], rules: &Vec<Vec<usize>>) -> bool {
     true
 }
 
-fn sorted_pages(pages: &[usize], rules: &Vec<Vec<usize>>) -> Vec<usize> {
+fn sorted_pages(pages: &[usize], rules: &[Vec<usize>]) -> Vec<usize> {
     let mut result = pages.to_vec();
 
     result.sort_unstable_by(|a, b| {

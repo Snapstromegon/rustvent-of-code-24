@@ -21,10 +21,7 @@ fn nom_multiplication(input: &str) -> IResult<&str, (u32, u32)> {
 }
 
 fn nom_muls(input: &str) -> usize {
-    let result: IResult<&str, Vec<(Vec<char>, (u32, u32))>> =
-        many0(many_till(anychar, nom_multiplication))(input);
-
-    let (_, muls) = result.unwrap();
+    let (_, muls) = many0(many_till(anychar, nom_multiplication))(input).unwrap();
 
     muls.iter().map(|(_, (a, b))| (a * b) as usize).sum()
 }
