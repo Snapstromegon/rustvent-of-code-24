@@ -1,22 +1,37 @@
 use crate::solution::Solution;
-use regex::Regex;
-
+use nom::{
+    bytes::complete::tag,
+    character::complete::anychar,
+    multi::{many0, many_till},
+    sequence::{delimited, separated_pair},
+    IResult,
+};
 pub struct Day;
 
-fn run_muls(input: &str) -> usize {
-    let re = Regex::new(r"mul\((?P<fac1>\d{1,3}),(?P<fac2>\d{1,3})\)").unwrap();
-    re.captures_iter(input)
-        .map(|cap| {
-            let fac1 = cap["fac1"].parse::<usize>().unwrap();
-            let fac2 = cap["fac2"].parse::<usize>().unwrap();
-            fac1 * fac2
-        })
-        .sum()
+fn nom_multiplication(input: &str) -> IResult<&str, (u32, u32)> {
+    delimited(
+        tag("mul("),
+        separated_pair(
+            nom::character::complete::u32,
+            tag(","),
+            nom::character::complete::u32,
+        ),
+        tag(")"),
+    )(input)
+}
+
+fn nom_muls(input: &str) -> usize {
+    let result: IResult<&str, Vec<(Vec<char>, (u32, u32))>> =
+        many0(many_till(anychar, nom_multiplication))(input);
+
+    let (_, muls) = result.unwrap();
+
+    muls.iter().map(|(_, (a, b))| (a * b) as usize).sum()
 }
 
 impl Solution for Day {
     fn part1(&self, input: &str) -> Option<usize> {
-        Some(run_muls(input))
+        Some(nom_muls(input))
     }
 
     fn part2(&self, input: &str) -> Option<usize> {
@@ -24,7 +39,7 @@ impl Solution for Day {
         let mut sum = 0;
         for part in do_split {
             let enabled = part.split("don't()").next().unwrap();
-            sum += run_muls(enabled);
+            sum += nom_muls(enabled);
         }
         Some(sum)
     }
