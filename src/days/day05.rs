@@ -1,19 +1,18 @@
-use std::{cmp::Ordering, collections::HashMap};
+use std::cmp::Ordering;
 
 use crate::solution::Solution;
 
-fn parse_input(input: &str) -> (HashMap<usize, Vec<usize>>, Vec<Vec<usize>>) {
+fn parse_input(input: &str) -> (Vec<Vec<usize>>, Vec<Vec<usize>>) {
     let mut parts = input.split("\n\n");
     let rules_part = parts.next().unwrap();
     let pages_part = parts.next().unwrap();
 
-    let mut rules: HashMap<usize, Vec<usize>> = HashMap::new();
+    let mut rules: Vec<Vec<usize>> = Vec::with_capacity(100);
+    rules.resize_with(100, Default::default);
 
     for rule in rules_part.lines() {
         let mut line_parts = rule.split("|");
-        rules
-            .entry(line_parts.next().unwrap().parse().unwrap())
-            .or_default()
+        rules[line_parts.next().unwrap().parse::<usize>().unwrap()]
             .push(line_parts.next().unwrap().parse().unwrap());
     }
 
@@ -29,11 +28,11 @@ fn middle_page(pages: &[usize]) -> usize {
     pages[pages.len() / 2]
 }
 
-fn is_pages_sorted(pages: &[usize], rules: &HashMap<usize, Vec<usize>>) -> bool {
+fn is_pages_sorted(pages: &[usize], rules: &Vec<Vec<usize>>) -> bool {
     // we know that numbers are always two digits
     let mut seen = [false; 100];
     for page in pages {
-        for must_be_after in rules.get(page).unwrap_or(&Vec::new()) {
+        for must_be_after in &rules[*page] {
             if seen[*must_be_after] {
                 return false;
             }
@@ -43,19 +42,15 @@ fn is_pages_sorted(pages: &[usize], rules: &HashMap<usize, Vec<usize>>) -> bool 
     true
 }
 
-fn sorted_pages(pages: &[usize], rules: &HashMap<usize, Vec<usize>>) -> Vec<usize> {
+fn sorted_pages(pages: &[usize], rules: &Vec<Vec<usize>>) -> Vec<usize> {
     let mut result = pages.to_vec();
 
     result.sort_unstable_by(|a, b| {
-        if let Some(after_pages) = rules.get(a) {
-            if after_pages.contains(b) {
-                return Ordering::Less;
-            }
+        if rules[*a].contains(b) {
+            return Ordering::Less;
         }
-        if let Some(after_pages) = rules.get(b) {
-            if after_pages.contains(a) {
-                return Ordering::Greater;
-            }
+        if rules[*b].contains(a) {
+            return Ordering::Greater;
         }
         Ordering::Equal
     });
