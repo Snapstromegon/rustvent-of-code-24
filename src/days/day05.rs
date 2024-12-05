@@ -32,7 +32,7 @@ fn parse_input(input: &str) -> (Vec<(usize, usize)>, Vec<Vec<usize>>) {
 fn get_rules_map(raw_rules: &[(usize, usize)]) -> HashMap<usize, Vec<usize>> {
     let mut rules_map: HashMap<usize, Vec<usize>> = HashMap::new();
     for (before, after) in raw_rules {
-        rules_map.entry(*before).or_insert(Vec::new()).push(*after);
+        rules_map.entry(*before).or_default().push(*after);
     }
     rules_map
 }
@@ -44,7 +44,7 @@ fn middle_page(pages: &[usize]) -> usize {
 fn is_pages_sorted(pages: &[usize], rules: &HashMap<usize, Vec<usize>>) -> bool {
     let mut seen = HashSet::new();
     for page in pages {
-        for must_be_after in rules.get(&page).unwrap_or(&Vec::new()) {
+        for must_be_after in rules.get(page).unwrap_or(&Vec::new()) {
             if seen.contains(must_be_after) {
                 return false;
             }
