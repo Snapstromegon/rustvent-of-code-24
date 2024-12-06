@@ -1,8 +1,9 @@
+use rayon::prelude::*;
 use std::{collections::HashSet, str::FromStr};
 
 use crate::solution::Solution;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 enum Direction {
     Up,
     Down,
@@ -45,12 +46,13 @@ impl Position {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Field {
     guard_pos: Position,
     guard_dir: Direction,
     obstacles: HashSet<Position>,
     visited: HashSet<Position>,
+    visited_with_dir: HashSet<(Position, Direction)>,
     rows: usize,
     cols: usize,
 }
@@ -69,6 +71,8 @@ impl Field {
             self.guard_dir = self.guard_dir.turn_right();
         }
         self.visited.insert(self.guard_pos);
+        self.visited_with_dir
+            .insert((self.guard_pos, self.guard_dir));
         self.guard_pos = self.next_guard_pos();
     }
 
@@ -81,6 +85,17 @@ impl Field {
         while self.is_guard_inside() {
             self.guard_step();
         }
+    }
+
+    fn is_looping(&mut self) -> bool {
+        let mut guard_state = (self.guard_pos, self.guard_dir);
+        while self.is_guard_inside() && !self.visited_with_dir.contains(&guard_state) {
+            self.guard_step();
+            self.visited_with_dir.insert(guard_state);
+            guard_state = (self.guard_pos, self.guard_dir);
+        }
+
+        self.visited_with_dir.contains(&guard_state)
     }
 }
 
@@ -118,6 +133,7 @@ impl FromStr for Field {
             guard_dir: Direction::Up,
             obstacles,
             visited: HashSet::new(),
+            visited_with_dir: HashSet::new(),
             rows: rows + 1,
             cols: cols + 1,
         })
@@ -133,8 +149,26 @@ impl Solution for Day {
         Some(field.visited.len())
     }
 
-    fn part2(&self, _input: &str) -> Option<usize> {
-        None
+    fn part2(&self, input: &str) -> Option<usize> {
+        let field: Field = input.parse().expect("Field not parsable");
+
+        let mut cloned = field.clone();
+        cloned.simulate_to_exit();
+
+        let looping_count = cloned
+            .visited
+            .par_iter()
+            .filter(|Position { row, col }| {
+                let mut field_clone = field.clone();
+                field_clone.obstacles.insert(Position {
+                    row: *row as isize,
+                    col: *col as isize,
+                });
+                field_clone.is_looping()
+            })
+            .count();
+
+        Some(looping_count)
     }
 }
 
@@ -160,11 +194,11 @@ mod tests {
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(6));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(1304));
     }
 }
