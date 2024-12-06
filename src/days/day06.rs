@@ -46,13 +46,20 @@ impl Position {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum GridCell {
+    Open,
+    Obstacle,
+    Visited,
+}
+
 #[derive(Debug, Clone)]
 struct Field {
+    grid: Vec<Vec<GridCell>>,
     guard_pos: Position,
     guard_dir: Direction,
-    obstacles: HashSet<Position>,
-    visited: HashSet<Position>,
-    visited_with_dir: HashSet<(Position, Direction)>,
+    visited: Vec<Position>,
+    visited_with_dir: Vec<Vec<Option<Direction>>>,
     rows: usize,
     cols: usize,
 }
@@ -63,14 +70,24 @@ impl Field {
     }
 
     fn is_step_possible(&self) -> bool {
-        !self.obstacles.contains(&self.next_guard_pos())
+        let next_pos = self.next_guard_pos();
+        if (0..self.grid.len() as isize).contains(&next_pos.row)
+            && (0..self.grid[0].len() as isize).contains(&next_pos.col)
+        {
+            self.grid[next_pos.row as usize][next_pos.col as usize] != GridCell::Obstacle
+        } else {
+            true
+        }
     }
 
     fn guard_step(&mut self) {
         while !self.is_step_possible() {
             self.guard_dir = self.guard_dir.turn_right();
         }
-        self.visited.insert(self.guard_pos);
+        if self.grid[self.guard_pos.row as usize][self.guard_pos.col as usize] == GridCell::Open {
+            self.visited.push(self.guard_pos);
+        }
+        self.grid[self.guard_pos.row as usize][self.guard_pos.col as usize] = GridCell::Visited;
         self.guard_pos = self.next_guard_pos();
     }
 
@@ -87,13 +104,13 @@ impl Field {
 
     fn is_looping(&mut self) -> bool {
         let mut guard_state = (self.guard_pos, self.guard_dir);
-        while self.is_guard_inside() && !self.visited_with_dir.contains(&guard_state) {
+        while self.is_guard_inside() && self.visited_with_dir[guard_state.0.row as usize][guard_state.0.col as usize] != Some(guard_state.1) {
             self.guard_step();
-            self.visited_with_dir.insert(guard_state);
+            self.visited_with_dir[guard_state.0.row as usize][guard_state.0.col as usize] = Some(guard_state.1);
             guard_state = (self.guard_pos, self.guard_dir);
         }
 
-        self.visited_with_dir.contains(&guard_state)
+        self.is_guard_inside()
     }
 }
 
@@ -104,34 +121,45 @@ impl FromStr for Field {
         let mut obstacles = HashSet::new();
         let mut rows = 0;
         let mut cols = 0;
+
+        let mut grid = Vec::with_capacity(200);
+        let mut visited_with_dir = Vec::with_capacity(200);
+
         for (row, line) in s.lines().enumerate() {
             rows = row;
+            let mut grid_line = Vec::with_capacity(200);
+            let mut visited_with_dir_line = Vec::with_capacity(200);
             for (col, char) in line.chars().enumerate() {
                 cols = col;
-                match char {
+                grid_line.push(match char {
                     '^' => {
                         maybe_guard_pos = Some(Position {
                             row: row as isize,
                             col: col as isize,
-                        })
+                        });
+                        GridCell::Open
                     }
                     '#' => {
                         obstacles.insert(Position {
                             row: row as isize,
                             col: col as isize,
                         });
+                        GridCell::Obstacle
                     }
-                    _ => {}
-                }
+                    _ => GridCell::Open,
+                });
+                visited_with_dir_line.push(None);
             }
+            grid.push(grid_line);
+            visited_with_dir.push(visited_with_dir_line);
         }
 
         Ok(Field {
+            grid,
             guard_pos: maybe_guard_pos.ok_or("No Guard found")?,
             guard_dir: Direction::Up,
-            obstacles,
-            visited: HashSet::new(),
-            visited_with_dir: HashSet::new(),
+            visited: Vec::new(),
+            visited_with_dir,
             rows: rows + 1,
             cols: cols + 1,
         })
@@ -158,10 +186,7 @@ impl Solution for Day {
             .par_iter()
             .filter(|Position { row, col }| {
                 let mut field_clone = field.clone();
-                field_clone.obstacles.insert(Position {
-                    row: *row as isize,
-                    col: *col as isize,
-                });
+                field_clone.grid[*row as usize][*col as usize] = GridCell::Obstacle;
                 field_clone.is_looping()
             })
             .count();
@@ -195,7 +220,6 @@ mod tests {
         assert_eq!(Day.part2(&input), Some(6));
     }
     #[test]
-    #[ignore = "takes long to run"]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
         assert_eq!(Day.part2(&input), Some(1304));
