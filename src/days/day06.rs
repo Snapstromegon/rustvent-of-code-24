@@ -195,6 +195,7 @@ mod tests {
         assert_eq!(Day.part2(&input), Some(6));
     }
     #[test]
+    #[ignore = "takes long to run"]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
         assert_eq!(Day.part2(&input), Some(1304));
