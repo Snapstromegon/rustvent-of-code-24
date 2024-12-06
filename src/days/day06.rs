@@ -1,9 +1,9 @@
 use rayon::prelude::*;
-use std::{collections::HashSet, str::FromStr};
+use std::str::FromStr;
 
 use crate::solution::Solution;
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum Direction {
     Up,
     Down,
@@ -31,7 +31,7 @@ impl Direction {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 struct Position {
     row: isize,
     col: isize,
@@ -104,9 +104,13 @@ impl Field {
 
     fn is_looping(&mut self) -> bool {
         let mut guard_state = (self.guard_pos, self.guard_dir);
-        while self.is_guard_inside() && self.visited_with_dir[guard_state.0.row as usize][guard_state.0.col as usize] != Some(guard_state.1) {
+        while self.is_guard_inside()
+            && self.visited_with_dir[guard_state.0.row as usize][guard_state.0.col as usize]
+                != Some(guard_state.1)
+        {
             self.guard_step();
-            self.visited_with_dir[guard_state.0.row as usize][guard_state.0.col as usize] = Some(guard_state.1);
+            self.visited_with_dir[guard_state.0.row as usize][guard_state.0.col as usize] =
+                Some(guard_state.1);
             guard_state = (self.guard_pos, self.guard_dir);
         }
 
@@ -118,10 +122,8 @@ impl FromStr for Field {
     type Err = &'static str;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut maybe_guard_pos = None;
-        let mut obstacles = HashSet::new();
         let mut rows = 0;
         let mut cols = 0;
-
         let mut grid = Vec::with_capacity(200);
         let mut visited_with_dir = Vec::with_capacity(200);
 
@@ -139,13 +141,7 @@ impl FromStr for Field {
                         });
                         GridCell::Open
                     }
-                    '#' => {
-                        obstacles.insert(Position {
-                            row: row as isize,
-                            col: col as isize,
-                        });
-                        GridCell::Obstacle
-                    }
+                    '#' => GridCell::Obstacle,
                     _ => GridCell::Open,
                 });
                 visited_with_dir_line.push(None);
