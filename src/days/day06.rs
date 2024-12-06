@@ -71,8 +71,6 @@ impl Field {
             self.guard_dir = self.guard_dir.turn_right();
         }
         self.visited.insert(self.guard_pos);
-        self.visited_with_dir
-            .insert((self.guard_pos, self.guard_dir));
         self.guard_pos = self.next_guard_pos();
     }
 
