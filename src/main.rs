@@ -25,6 +25,7 @@ fn get_day(day: usize) -> Option<Box<dyn Solution>> {
         3 => Some(Box::new(day03::Day)),
         4 => Some(Box::new(day04::Day)),
         5 => Some(Box::new(day05::Day)),
+        6 => Some(Box::new(day06::Day)),
         _ => None,
     }
 }
