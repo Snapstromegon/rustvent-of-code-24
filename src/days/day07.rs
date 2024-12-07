@@ -1,4 +1,5 @@
 use crate::solution::Solution;
+use rayon::prelude::*;
 
 fn parse_equations(input: &str) -> Vec<(usize, Vec<usize>)> {
     input
@@ -21,7 +22,13 @@ fn is_equations_solvable((result, params): &(usize, Vec<usize>), valid_ops: &[Op
     base_operators.fill(valid_ops[0]);
 
     let ops_count = valid_ops.len();
-    let total_tries = valid_ops.len().pow(params.len() as u32 - 1);
+    let total_tries = ops_count.pow(params.len() as u32 - 1);
+    let pre_calced_ops_pow: Vec<usize> = params
+        .iter()
+        .skip(1)
+        .enumerate()
+        .map(|(j, _)| ops_count.pow(j as u32))
+        .collect();
 
     for i in 0..=total_tries {
         let compare = params
@@ -29,7 +36,7 @@ fn is_equations_solvable((result, params): &(usize, Vec<usize>), valid_ops: &[Op
             .skip(1)
             .enumerate()
             .fold(params[0], |acc, (j, p)| {
-                let op_index = (i / (ops_count.pow(j as u32))) % ops_count;
+                let op_index = (i / pre_calced_ops_pow[j]) % ops_count;
                 valid_ops[op_index].apply(acc, *p)
             });
         if compare == *result {
@@ -43,7 +50,7 @@ fn is_equations_solvable((result, params): &(usize, Vec<usize>), valid_ops: &[Op
 enum Operator {
     Add,
     Multiply,
-    Comcat,
+    Concat,
 }
 
 impl Operator {
@@ -51,7 +58,7 @@ impl Operator {
         match self {
             Operator::Add => a + b,
             Operator::Multiply => a * b,
-            Operator::Comcat => a * b.ilog10() as usize + b,
+            Operator::Concat => a * (10 as usize).pow(b.ilog10() + 1) + b,
         }
     }
 }
@@ -63,7 +70,7 @@ impl Solution for Day {
         let ops = vec![Operator::Add, Operator::Multiply];
         Some(
             parse_equations(input)
-                .iter()
+                .par_iter()
                 .filter(|eq| is_equations_solvable(*eq, &ops))
                 .map(|eq| eq.0)
                 .sum(),
@@ -71,10 +78,10 @@ impl Solution for Day {
     }
 
     fn part2(&self, input: &str) -> Option<usize> {
-        let ops = vec![Operator::Add, Operator::Multiply, Operator::Comcat];
+        let ops = vec![Operator::Add, Operator::Multiply, Operator::Concat];
         Some(
             parse_equations(input)
-                .iter()
+                .par_iter()
                 .filter(|eq| is_equations_solvable(*eq, &ops))
                 .map(|eq| eq.0)
                 .sum(),
@@ -96,7 +103,6 @@ mod tests {
         assert_eq!(Day.part1(&input), Some(3749));
     }
     #[test]
-    #[ignore]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
         assert_eq!(Day.part1(&input), Some(2299996598890));
@@ -108,7 +114,7 @@ mod tests {
         assert_eq!(Day.part2(&input), Some(11387));
     }
     #[test]
-    #[ignore]
+    #[ignore = "takes too long"]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
         assert_eq!(Day.part2(&input), Some(362646859298554));
