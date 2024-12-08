@@ -103,15 +103,13 @@ impl Field {
     }
 
     fn is_looping(&mut self) -> bool {
-        let mut guard_state = (self.guard_pos, self.guard_dir);
         while self.is_guard_inside()
-            && self.visited_with_dir[guard_state.0.row as usize][guard_state.0.col as usize]
-                != Some(guard_state.1)
+            && self.visited_with_dir[self.guard_pos.row as usize][self.guard_pos.col as usize]
+                != Some(self.guard_dir)
         {
+            self.visited_with_dir[self.guard_pos.row as usize][self.guard_pos.col as usize] =
+                Some(self.guard_dir);
             self.guard_step();
-            self.visited_with_dir[guard_state.0.row as usize][guard_state.0.col as usize] =
-                Some(guard_state.1);
-            guard_state = (self.guard_pos, self.guard_dir);
         }
 
         self.is_guard_inside()
