@@ -58,7 +58,7 @@ impl Operator {
         match self {
             Operator::Add => a + b,
             Operator::Multiply => a * b,
-            Operator::Concat => a * (10 as usize).pow(b.ilog10() + 1) + b,
+            Operator::Concat => a * (10_usize).pow(b.ilog10() + 1) + b,
         }
     }
 }
@@ -71,7 +71,7 @@ impl Solution for Day {
         Some(
             parse_equations(input)
                 .par_iter()
-                .filter(|eq| is_equations_solvable(*eq, &ops))
+                .filter(|eq| is_equations_solvable(eq, &ops))
                 .map(|eq| eq.0)
                 .sum(),
         )
@@ -82,7 +82,7 @@ impl Solution for Day {
         Some(
             parse_equations(input)
                 .par_iter()
-                .filter(|eq| is_equations_solvable(*eq, &ops))
+                .filter(|eq| is_equations_solvable(eq, &ops))
                 .map(|eq| eq.0)
                 .sum(),
         )
