@@ -17,29 +17,12 @@ fn parse_equations(input: &str) -> Vec<(usize, Vec<usize>)> {
         .collect()
 }
 
-fn is_equations_solvable((result, params): &(usize, Vec<usize>), valid_ops: &[Operator]) -> bool {
-    let mut base_operators = Vec::with_capacity(params.len() - 1);
-    base_operators.fill(valid_ops[0]);
-
-    let ops_count = valid_ops.len();
-    let total_tries = ops_count.pow(params.len() as u32 - 1);
-    let pre_calced_ops_pow: Vec<usize> = params
-        .iter()
-        .skip(1)
-        .enumerate()
-        .map(|(j, _)| ops_count.pow(j as u32))
-        .collect();
-
-    for i in 0..=total_tries {
-        let compare = params
-            .iter()
-            .skip(1)
-            .enumerate()
-            .fold(params[0], |acc, (j, p)| {
-                let op_index = (i / pre_calced_ops_pow[j]) % ops_count;
-                valid_ops[op_index].apply(acc, *p)
-            });
-        if compare == *result {
+fn recursive_is_solvable(expected: usize, current: usize, params: &[usize], ops: &[Operator]) -> bool {
+    if params.is_empty() {
+        return expected == current;
+    }
+    for op in ops {
+        if recursive_is_solvable(expected, op.apply(current, params[0]), &params[1..], ops) {
             return true;
         }
     }
@@ -71,18 +54,18 @@ impl Solution for Day {
         Some(
             parse_equations(input)
                 .par_iter()
-                .filter(|eq| is_equations_solvable(eq, &ops))
+                .filter(|eq| recursive_is_solvable(eq.0, eq.1[0], &eq.1[1..], &ops))
                 .map(|eq| eq.0)
                 .sum(),
-        )
-    }
-
-    fn part2(&self, input: &str) -> Option<usize> {
-        let ops = vec![Operator::Add, Operator::Multiply, Operator::Concat];
-        Some(
-            parse_equations(input)
+            )
+        }
+        
+        fn part2(&self, input: &str) -> Option<usize> {
+            let ops = vec![Operator::Add, Operator::Multiply, Operator::Concat];
+            Some(
+                parse_equations(input)
                 .par_iter()
-                .filter(|eq| is_equations_solvable(eq, &ops))
+                .filter(|eq| recursive_is_solvable(eq.0, eq.1[0], &eq.1[1..], &ops))
                 .map(|eq| eq.0)
                 .sum(),
         )
@@ -114,7 +97,6 @@ mod tests {
         assert_eq!(Day.part2(&input), Some(11387));
     }
     #[test]
-    #[ignore = "takes too long"]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
         assert_eq!(Day.part2(&input), Some(362646859298554));
