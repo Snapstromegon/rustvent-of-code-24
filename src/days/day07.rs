@@ -17,16 +17,19 @@ fn parse_equations(input: &str) -> Vec<(usize, Vec<usize>)> {
         .collect()
 }
 
-fn recursive_is_solvable(expected: usize, current: usize, params: &[usize], ops: &[Operator]) -> bool {
+fn recursive_is_solvable(
+    expected: usize,
+    current: usize,
+    params: &[usize],
+    ops: &[Operator],
+) -> bool {
     if params.is_empty() {
-        return expected == current;
+        expected == current
+    } else {
+        ops.iter().any(|op| {
+            recursive_is_solvable(expected, op.apply(current, params[0]), &params[1..], ops)
+        })
     }
-    for op in ops {
-        if recursive_is_solvable(expected, op.apply(current, params[0]), &params[1..], ops) {
-            return true;
-        }
-    }
-    false
 }
 
 #[derive(Clone, Debug, Copy)]
@@ -57,13 +60,13 @@ impl Solution for Day {
                 .filter(|eq| recursive_is_solvable(eq.0, eq.1[0], &eq.1[1..], &ops))
                 .map(|eq| eq.0)
                 .sum(),
-            )
-        }
-        
-        fn part2(&self, input: &str) -> Option<usize> {
-            let ops = vec![Operator::Add, Operator::Multiply, Operator::Concat];
-            Some(
-                parse_equations(input)
+        )
+    }
+
+    fn part2(&self, input: &str) -> Option<usize> {
+        let ops = vec![Operator::Add, Operator::Multiply, Operator::Concat];
+        Some(
+            parse_equations(input)
                 .par_iter()
                 .filter(|eq| recursive_is_solvable(eq.0, eq.1[0], &eq.1[1..], &ops))
                 .map(|eq| eq.0)
