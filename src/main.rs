@@ -3,8 +3,8 @@ pub mod days;
 pub mod solution;
 pub mod utils;
 
-use days::*;
-use solution::{Part, Solution};
+use days::get_day;
+use solution::Part;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -15,22 +15,6 @@ struct Args {
     /// Number of times to greet
     #[arg(short, long, default_value_t = false)]
     example: bool,
-}
-
-fn get_day(day: usize) -> Option<Box<dyn Solution>> {
-    match day {
-        0 => Some(Box::new(day00::Day)),
-        1 => Some(Box::new(day01::Day)),
-        2 => Some(Box::new(day02::Day)),
-        3 => Some(Box::new(day03::Day)),
-        4 => Some(Box::new(day04::Day)),
-        5 => Some(Box::new(day05::Day)),
-        6 => Some(Box::new(day06::Day)),
-        7 => Some(Box::new(day07::Day)),
-        8 => Some(Box::new(day08::Day)),
-        9 => Some(Box::new(day09::Day)),
-        _ => None,
-    }
 }
 
 fn run_part(day: usize, part: Part, example: bool) {
