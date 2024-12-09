@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use crate::solution::Solution;
 
 fn parse_input(input: &str) -> (usize, Vec<usize>, Vec<usize>) {
@@ -22,47 +24,64 @@ fn parse_input(input: &str) -> (usize, Vec<usize>, Vec<usize>) {
     (size, used, available)
 }
 
-fn build_storage(size: usize, used: &[usize], available: &[usize]) -> Vec<Option<usize>> {
-    let mut storage = Vec::with_capacity(size);
-
-    for (id, block_size) in used.iter().enumerate() {
-        for _ in 0..*block_size {
-            storage.push(Some(id));
-        }
-        if let Some(available) = available.get(id) {
-            for _ in 0..*available {
-                storage.push(None);
-            }
-        }
-    }
-
-    storage
-}
-
-fn defrag(storage: &mut Vec<Option<usize>>) -> Vec<Option<usize>> {
-    let mut defragged = storage.clone();
-
-    for i in 0..defragged.len() {
-        if defragged[i] == None {
-            if let Some(next_some) = (i..defragged.len())
-                .rev()
-                .find(|j| defragged.get(*j).unwrap_or(&None).is_some())
-            {
-                defragged.swap(i, next_some);
-            }
-        }
-    }
-
-    defragged
-}
-
 #[derive(Debug, PartialEq, Eq)]
 enum Block {
     Used(usize, usize),
     Free(usize),
 }
 
-fn merge_blocks(used: &[usize], available: &[usize]) -> Vec<Option<usize>> {
+impl Block {
+    fn size(&self) -> usize {
+        match self {
+            Self::Free(size) => *size,
+            Self::Used(_, size) => *size,
+        }
+    }
+
+    fn id(&self) -> Option<usize> {
+        match self {
+            Self::Free(_) => None,
+            Self::Used(id, _) => Some(*id),
+        }
+    }
+}
+
+fn marge_chunked(used: &[usize], available: &[usize]) -> usize {
+    let mut used_blocks = VecDeque::from_iter(used.iter().copied().enumerate());
+    let mut available = available.to_vec();
+    let mut iter_avail = available.iter_mut();
+    let mut layout = vec![];
+
+    while !used_blocks.is_empty() {
+        layout.push(used_blocks.pop_front().unwrap());
+        if let Some(avail) = iter_avail.next() {
+            while !used_blocks.is_empty() && *avail > 0 {
+                let (id, next_used_size) = used_blocks.pop_back().unwrap();
+                if next_used_size <= *avail {
+                    *avail -= next_used_size;
+                    layout.push((id, next_used_size));
+                } else {
+                    layout.push((id, *avail));
+                    used_blocks.push_back((id, next_used_size - *avail));
+                    *avail = 0;
+                }
+            }
+        }
+    }
+
+    let mut result = 0;
+    let mut pos = 0;
+    for (id, size) in layout {
+        for _ in 0..size {
+            result += id * pos;
+            pos +=1;
+        }
+    }
+
+    result
+}
+
+fn merge_blocks(used: &[usize], available: &[usize]) -> usize {
     let mut block_list = Vec::new();
 
     for i in 0..used.len() {
@@ -73,42 +92,38 @@ fn merge_blocks(used: &[usize], available: &[usize]) -> Vec<Option<usize>> {
     }
 
     'outer: for i in (0..used.len()).rev() {
-        let block_index = block_list
-            .iter()
-            .position(|b| matches!(b, Block::Used(id, _) if *id==i))
-            .unwrap();
+        let block_index = block_list.iter().position(|b| b.id() == Some(i)).unwrap();
         for j in 0..block_index {
             if let Block::Free(size) = block_list[j] {
-                if let Block::Used(_, block_size) = block_list[block_index] {
-                    if size > block_size {
-                        block_list[j] = Block::Free(size - block_size);
-                        let block = block_list.remove(block_index);
-                        block_list.insert(block_index, Block::Free(block_size));
-                        block_list.insert(j, block);
-                        continue 'outer;
-                    }
-                    if size == block_size {
-                        let block = block_list.remove(block_index);
-                        block_list.insert(block_index, Block::Free(block_size));
-                        block_list[j] = block;
-                        continue 'outer;
-                    }
+                let block_size = block_list[block_index].size();
+                if size > block_size {
+                    block_list[j] = Block::Free(size - block_size);
+                    let block = block_list.remove(block_index);
+                    block_list.insert(block_index, Block::Free(block_size));
+                    block_list.insert(j, block);
+                    continue 'outer;
+                }
+                if size == block_size {
+                    let block = block_list.remove(block_index);
+                    block_list.insert(block_index, Block::Free(block_size));
+                    block_list[j] = block;
+                    continue 'outer;
                 }
             }
         }
     }
 
-    let mut result = vec![];
+    let mut result = 0;
+    let mut pos = 0;
     for block in block_list {
         match block {
             Block::Free(size) => {
-                for _ in 0..size {
-                    result.push(None);
-                }
+                pos += size;
             }
             Block::Used(id, size) => {
                 for _ in 0..size {
-                    result.push(Some(id));
+                    result += pos * id;
+                    pos += 1;
                 }
             }
         }
@@ -120,28 +135,14 @@ pub struct Day;
 
 impl Solution for Day {
     fn part1(&self, input: &str) -> Option<usize> {
-        let (size, used, available) = parse_input(input);
-        let storage = build_storage(size, &used, &available);
-        let defragged = defrag(&mut storage.clone());
-        let result = defragged
-            .iter()
-            .enumerate()
-            .filter(|(_, block)| block.is_some())
-            .map(|(i, id)| i * id.unwrap())
-            .sum();
-        Some(result)
+        let (_size, used, available) = parse_input(input);
+        Some(marge_chunked(&used, &available))
     }
 
     fn part2(&self, input: &str) -> Option<usize> {
         let (_size, used, available) = parse_input(input);
         let merged = merge_blocks(&used, &available);
-        let result = merged
-            .iter()
-            .enumerate()
-            .filter(|(_, block)| block.is_some())
-            .map(|(i, id)| i * id.unwrap())
-            .sum();
-        Some(result)
+        Some(merged)
     }
 }
 
@@ -159,7 +160,6 @@ mod tests {
         assert_eq!(Day.part1(&input), Some(1928));
     }
     #[test]
-    #[ignore = "takes too long"]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
         assert_eq!(Day.part1(&input), Some(6291146824486));
