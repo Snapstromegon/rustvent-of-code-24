@@ -39,20 +39,16 @@ fn build_storage(size: usize, used: &[usize], available: &[usize]) -> Vec<Option
     storage
 }
 
-fn defrag(storage: &mut Vec<Option<usize>>) -> Vec<usize> {
-    let mut defragged = Vec::new();
+fn defrag(storage: &mut Vec<Option<usize>>) -> Vec<Option<usize>> {
+    let mut defragged = storage.clone();
 
-    while storage.len() > 0 {
-        while storage.len() > 0 && storage[0].is_some() {
-            defragged.push(storage.remove(0).unwrap());
-        }
-        while storage.len() > 0 && storage.first().unwrap().is_none() {
-            while storage.len() > 0 && storage.last().unwrap().is_none() {
-                storage.pop();
-            }
-            if storage.len() > 0 {
-                storage.remove(0);
-                defragged.push(storage.pop().unwrap().unwrap());
+    for i in 0..defragged.len() {
+        if defragged[i] == None {
+            if let Some(next_some) = (i..defragged.len())
+                .rev()
+                .find(|j| defragged.get(*j).unwrap_or(&None).is_some())
+            {
+                defragged.swap(i, next_some);
             }
         }
     }
@@ -127,7 +123,12 @@ impl Solution for Day {
         let (size, used, available) = parse_input(input);
         let storage = build_storage(size, &used, &available);
         let defragged = defrag(&mut storage.clone());
-        let result = defragged.iter().enumerate().map(|(i, id)| i * *id).sum();
+        let result = defragged
+            .iter()
+            .enumerate()
+            .filter(|(_, block)| block.is_some())
+            .map(|(i, id)| i * id.unwrap())
+            .sum();
         Some(result)
     }
 
@@ -158,7 +159,6 @@ mod tests {
         assert_eq!(Day.part1(&input), Some(1928));
     }
     #[test]
-    #[ignore]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
         assert_eq!(Day.part1(&input), Some(6291146824486));
@@ -170,9 +170,8 @@ mod tests {
         assert_eq!(Day.part2(&input), Some(2858));
     }
     #[test]
-    #[ignore]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(6307279963620));
     }
 }
