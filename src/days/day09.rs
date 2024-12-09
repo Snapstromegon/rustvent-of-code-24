@@ -38,6 +38,13 @@ impl Block {
         }
     }
 
+    fn free_size(&self) -> usize {
+        match self {
+            Self::Free(size) => *size,
+            _ => 0,
+        }
+    }
+
     fn id(&self) -> Option<usize> {
         match self {
             Self::Free(_) => None,
@@ -91,25 +98,27 @@ fn merge_blocks(used: &[usize], available: &[usize]) -> usize {
         }
     }
 
-    'outer: for i in (0..used.len()).rev() {
+    for i in (0..used.len()).rev() {
         let block_index = block_list.iter().position(|b| b.id() == Some(i)).unwrap();
-        for j in 0..block_index {
-            if let Block::Free(free_size) = block_list[j] {
-                let block_size = block_list[block_index].size();
-                match free_size.cmp(&block_size) {
-                    std::cmp::Ordering::Greater => {
-                        block_list[j] = Block::Free(free_size - block_size);
-                        block_list.push(Block::Free(block_size));
-                        let block = block_list.swap_remove(block_index);
-                        block_list.insert(j, block);
-                        continue 'outer;
-                    }
-                    std::cmp::Ordering::Equal => {
-                        block_list.swap(j, block_index);
-                        continue 'outer;
-                    }
-                    _ => {}
+        let block_size = block_list[block_index].size();
+        let candidate = (0..block_index)
+            .map(|j| (j, &block_list[j]))
+            .find(|(_, block)| {
+                block.free_size() >= block_size
+            });
+        if let Some((j, block)) = candidate {
+            let free_size = block.free_size();
+            match free_size.cmp(&block_size) {
+                std::cmp::Ordering::Greater => {
+                    block_list[j] = Block::Free(free_size - block_size);
+                    block_list.push(Block::Free(block_size));
+                    let block = block_list.swap_remove(block_index);
+                    block_list.insert(j, block);
                 }
+                std::cmp::Ordering::Equal => {
+                    block_list.swap(j, block_index);
+                }
+                _ => {}
             }
         }
     }
