@@ -96,15 +96,19 @@ fn merge_blocks(used: &[usize], available: &[usize]) -> usize {
         for j in 0..block_index {
             if let Block::Free(free_size) = block_list[j] {
                 let block_size = block_list[block_index].size();
-                if free_size > block_size {
-                    block_list[j] = Block::Free(free_size - block_size);
-                    block_list.push(Block::Free(block_size));
-                    let block = block_list.swap_remove(block_index);
-                    block_list.insert(j, block);
-                    continue 'outer;
-                } else if free_size == block_size {
-                    block_list.swap(j, block_index);
-                    continue 'outer;
+                match free_size.cmp(&block_size) {
+                    std::cmp::Ordering::Greater => {
+                        block_list[j] = Block::Free(free_size - block_size);
+                        block_list.push(Block::Free(block_size));
+                        let block = block_list.swap_remove(block_index);
+                        block_list.insert(j, block);
+                        continue 'outer;
+                    }
+                    std::cmp::Ordering::Equal => {
+                        block_list.swap(j, block_index);
+                        continue 'outer;
+                    }
+                    _ => {}
                 }
             }
         }
