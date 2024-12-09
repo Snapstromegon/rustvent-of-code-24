@@ -72,10 +72,10 @@ fn marge_chunked(used: &[usize], available: &[usize]) -> usize {
     let mut result = 0;
     let mut pos = 0;
     for (id, size) in layout {
-        for _ in 0..size {
-            result += id * pos;
-            pos +=1;
-        }
+        let base = pos * size;
+        let top_triangle = size * (size.max(1) - 1) / 2;
+        result += id * (top_triangle + base);
+        pos += size;
     }
 
     result
@@ -94,19 +94,16 @@ fn merge_blocks(used: &[usize], available: &[usize]) -> usize {
     'outer: for i in (0..used.len()).rev() {
         let block_index = block_list.iter().position(|b| b.id() == Some(i)).unwrap();
         for j in 0..block_index {
-            if let Block::Free(size) = block_list[j] {
+            if let Block::Free(free_size) = block_list[j] {
                 let block_size = block_list[block_index].size();
-                if size > block_size {
-                    block_list[j] = Block::Free(size - block_size);
-                    let block = block_list.remove(block_index);
-                    block_list.insert(block_index, Block::Free(block_size));
+                if free_size > block_size {
+                    block_list[j] = Block::Free(free_size - block_size);
+                    block_list.push(Block::Free(block_size));
+                    let block = block_list.swap_remove(block_index);
                     block_list.insert(j, block);
                     continue 'outer;
-                }
-                if size == block_size {
-                    let block = block_list.remove(block_index);
-                    block_list.insert(block_index, Block::Free(block_size));
-                    block_list[j] = block;
+                } else if free_size == block_size {
+                    block_list.swap(j, block_index);
                     continue 'outer;
                 }
             }
@@ -121,10 +118,10 @@ fn merge_blocks(used: &[usize], available: &[usize]) -> usize {
                 pos += size;
             }
             Block::Used(id, size) => {
-                for _ in 0..size {
-                    result += pos * id;
-                    pos += 1;
-                }
+                let base = pos * size;
+                let top_triangle = size * (size.max(1) - 1) / 2;
+                result += id * (top_triangle + base);
+                pos += size;
             }
         }
     }
