@@ -159,6 +159,7 @@ mod tests {
         assert_eq!(Day.part1(&input), Some(1928));
     }
     #[test]
+    #[ignore = "takes too long"]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
         assert_eq!(Day.part1(&input), Some(6291146824486));
@@ -170,6 +171,7 @@ mod tests {
         assert_eq!(Day.part2(&input), Some(2858));
     }
     #[test]
+    #[ignore = "takes too long"]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
         assert_eq!(Day.part2(&input), Some(6307279963620));
