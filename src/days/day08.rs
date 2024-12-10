@@ -60,7 +60,8 @@ impl AntennaGrid {
     }
 
     fn pos_in_bounds(&self, pos: Position) -> bool {
-        (0..self.width as isize).contains(&pos.col) && (0..self.height as isize).contains(&pos.row)
+        (0..isize::try_from(self.width).unwrap()).contains(&pos.col)
+            && (0..isize::try_from(self.height).unwrap()).contains(&pos.row)
     }
 
     fn get_pos_antinodes(&self, a: Position, b: Position, resonants: bool) -> Vec<Position> {
@@ -102,8 +103,8 @@ impl FromStr for AntennaGrid {
             for (col, c) in line.chars().enumerate() {
                 if c != '.' {
                     antennas.entry(c).or_insert_with(Vec::new).push(Position {
-                        col: col as isize,
-                        row: row as isize,
+                        col: isize::try_from(col).unwrap(),
+                        row: isize::try_from(row).unwrap(),
                     });
                 }
             }

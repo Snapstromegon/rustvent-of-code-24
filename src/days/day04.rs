@@ -26,7 +26,7 @@ impl Direction {
         ]
     }
 
-    pub fn get_vector(&self) -> (i32, i32) {
+    pub fn get_vector(self) -> (i32, i32) {
         match self {
             Direction::Up => (0, -1),
             Direction::UpRight => (1, -1),
@@ -48,13 +48,17 @@ fn search_in_dir(
     search: &str,
 ) -> bool {
     let (dx, dy) = dir.get_vector();
-    let mut x = start_x as i32;
-    let mut y = start_y as i32;
+    let mut x = i32::try_from(start_x).unwrap();
+    let mut y = i32::try_from(start_y).unwrap();
     for c in search.chars() {
-        if x < 0 || y < 0 || x >= grid[0].len() as i32 || y >= grid.len() as i32 {
+        if x < 0
+            || y < 0
+            || x >= i32::try_from(grid[0].len()).unwrap()
+            || y >= i32::try_from(grid.len()).unwrap()
+        {
             return false;
         }
-        if grid[y as usize][x as usize] != c {
+        if grid[y.unsigned_abs() as usize][x.unsigned_abs() as usize] != c {
             return false;
         }
         x += dx;

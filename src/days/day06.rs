@@ -12,7 +12,7 @@ enum Direction {
 }
 
 impl Direction {
-    fn vector(&self) -> (isize, isize) {
+    fn vector(self) -> (isize, isize) {
         match self {
             Direction::Up => (-1, 0),
             Direction::Down => (1, 0),
@@ -21,7 +21,7 @@ impl Direction {
         }
     }
 
-    fn turn_right(&self) -> Self {
+    fn turn_right(self) -> Self {
         match self {
             Direction::Up => Direction::Right,
             Direction::Down => Direction::Left,
@@ -71,10 +71,11 @@ impl Field {
 
     fn is_step_possible(&self) -> bool {
         let next_pos = self.next_guard_pos();
-        if (0..self.grid.len() as isize).contains(&next_pos.row)
-            && (0..self.grid[0].len() as isize).contains(&next_pos.col)
+        if (0..isize::try_from(self.grid.len()).unwrap()).contains(&next_pos.row)
+            && (0..isize::try_from(self.grid[0].len()).unwrap()).contains(&next_pos.col)
         {
-            self.grid[next_pos.row as usize][next_pos.col as usize] != GridCell::Obstacle
+            self.grid[next_pos.row.unsigned_abs()][next_pos.col.unsigned_abs()]
+                != GridCell::Obstacle
         } else {
             true
         }
@@ -84,16 +85,19 @@ impl Field {
         while !self.is_step_possible() {
             self.guard_dir = self.guard_dir.turn_right();
         }
-        if self.grid[self.guard_pos.row as usize][self.guard_pos.col as usize] == GridCell::Open {
+        if self.grid[self.guard_pos.row.unsigned_abs()][self.guard_pos.col.unsigned_abs()]
+            == GridCell::Open
+        {
             self.visited.push(self.guard_pos);
         }
-        self.grid[self.guard_pos.row as usize][self.guard_pos.col as usize] = GridCell::Visited;
+        self.grid[self.guard_pos.row.unsigned_abs()][self.guard_pos.col.unsigned_abs()] =
+            GridCell::Visited;
         self.guard_pos = self.next_guard_pos();
     }
 
     fn is_guard_inside(&self) -> bool {
-        (0..self.rows as isize).contains(&self.guard_pos.row)
-            && (0..self.cols as isize).contains(&self.guard_pos.col)
+        (0..isize::try_from(self.rows).unwrap()).contains(&self.guard_pos.row)
+            && (0..isize::try_from(self.cols).unwrap()).contains(&self.guard_pos.col)
     }
 
     fn simulate_to_exit(&mut self) {
@@ -104,11 +108,12 @@ impl Field {
 
     fn is_looping(&mut self) -> bool {
         while self.is_guard_inside()
-            && self.visited_with_dir[self.guard_pos.row as usize][self.guard_pos.col as usize]
+            && self.visited_with_dir[self.guard_pos.row.unsigned_abs()]
+                [self.guard_pos.col.unsigned_abs()]
                 != Some(self.guard_dir)
         {
-            self.visited_with_dir[self.guard_pos.row as usize][self.guard_pos.col as usize] =
-                Some(self.guard_dir);
+            self.visited_with_dir[self.guard_pos.row.unsigned_abs()]
+                [self.guard_pos.col.unsigned_abs()] = Some(self.guard_dir);
             self.guard_step();
         }
 
@@ -134,8 +139,8 @@ impl FromStr for Field {
                 grid_line.push(match char {
                     '^' => {
                         maybe_guard_pos = Some(Position {
-                            row: row as isize,
-                            col: col as isize,
+                            row: isize::try_from(row).unwrap(),
+                            col: isize::try_from(col).unwrap(),
                         });
                         GridCell::Open
                     }
@@ -180,7 +185,7 @@ impl Solution for Day {
             .par_iter()
             .filter(|Position { row, col }| {
                 let mut field_clone = field.clone();
-                field_clone.grid[*row as usize][*col as usize] = GridCell::Obstacle;
+                field_clone.grid[row.unsigned_abs()][col.unsigned_abs()] = GridCell::Obstacle;
                 field_clone.is_looping()
             })
             .count();

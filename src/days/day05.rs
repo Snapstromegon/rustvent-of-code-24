@@ -11,14 +11,14 @@ fn parse_input(input: &str) -> (Vec<Vec<usize>>, Vec<Vec<usize>>) {
     rules.resize_with(100, Default::default);
 
     for rule in rules_part.lines() {
-        let mut line_parts = rule.split("|");
+        let mut line_parts = rule.split('|');
         rules[line_parts.next().unwrap().parse::<usize>().unwrap()]
             .push(line_parts.next().unwrap().parse().unwrap());
     }
 
     let pages = pages_part
         .lines()
-        .map(|line| line.split(",").map(|n| n.parse().unwrap()).collect())
+        .map(|line| line.split(',').map(|n| n.parse().unwrap()).collect())
         .collect();
 
     (rules, pages)

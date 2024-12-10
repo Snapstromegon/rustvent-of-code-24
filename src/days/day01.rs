@@ -20,11 +20,11 @@ pub struct Day;
 impl Solution for Day {
     fn part1(&self, input: &str) -> Option<usize> {
         let (mut left, mut right) = get_left_right_lists(input);
-        left.sort();
-        right.sort();
+        left.sort_unstable();
+        right.sort_unstable();
 
         let total_distance: i64 = left.iter().zip(right).map(|(l, r)| (l - r).abs()).sum();
-        Some(total_distance as usize)
+        Some(usize::try_from(total_distance).unwrap())
     }
 
     fn part2(&self, input: &str) -> Option<usize> {
@@ -39,7 +39,7 @@ impl Solution for Day {
             .iter()
             .map(|l| l * right_hash.get(l).unwrap_or(&0))
             .sum();
-        Some(result as usize)
+        Some(usize::try_from(result).unwrap())
     }
 }
 
@@ -50,7 +50,7 @@ mod tests {
     use crate::utils::read_input;
 
     const DAY: usize = 1;
-    
+
     #[test]
     fn test_part1_example() {
         let input = read_input(DAY, true, 1).unwrap();

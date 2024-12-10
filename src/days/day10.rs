@@ -29,23 +29,26 @@ impl FromStr for TopMap {
 }
 
 impl TopMap {
-    fn search_paths(&self, start_x: usize, start_y: usize, height: u8) -> HashSet<(usize, usize)> {
+    fn get_move_options(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
         let mut options = vec![];
-        if start_x > 0 {
-            options.push((start_x - 1, start_y));
+        if x > 0 {
+            options.push((x - 1, y));
         }
-        if start_x < self.width - 1 {
-            options.push((start_x + 1, start_y));
+        if x < self.width - 1 {
+            options.push((x + 1, y));
         }
-        if start_y > 0 {
-            options.push((start_x, start_y - 1));
+        if y > 0 {
+            options.push((x, y - 1));
         }
-        if start_y < self.height - 1 {
-            options.push((start_x, start_y + 1));
+        if y < self.height - 1 {
+            options.push((x, y + 1));
         }
+        options
+    }
 
+    fn search_paths(&self, start_x: usize, start_y: usize, height: u8) -> HashSet<(usize, usize)> {
         let mut hs = HashSet::new();
-        for (x, y) in options {
+        for (x, y) in self.get_move_options(start_x, start_y) {
             if self.map[y][x] == height {
                 if height == 9 {
                     hs.insert((x, y));
@@ -63,7 +66,6 @@ impl TopMap {
             for (x, cell) in row.iter().enumerate() {
                 if *cell == 0 {
                     let found_nines = self.search_paths(x, y, 1);
-                    // println!("{}:{} - {found_nines:?}", x, y);
                     scores_sum += found_nines.len();
                 }
             }
@@ -73,22 +75,8 @@ impl TopMap {
     }
 
     fn count_paths_to_nine(&self, start_x: usize, start_y: usize, height: u8) -> usize {
-        let mut options = vec![];
-        if start_x > 0 {
-            options.push((start_x - 1, start_y));
-        }
-        if start_x < self.width - 1 {
-            options.push((start_x + 1, start_y));
-        }
-        if start_y > 0 {
-            options.push((start_x, start_y - 1));
-        }
-        if start_y < self.height - 1 {
-            options.push((start_x, start_y + 1));
-        }
-
         let mut result = 0;
-        for (x, y) in options {
+        for (x, y) in self.get_move_options(start_x, start_y) {
             if self.map[y][x] == height {
                 if height == 9 {
                     result += 1;

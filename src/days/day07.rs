@@ -40,7 +40,7 @@ enum Operator {
 }
 
 impl Operator {
-    fn apply(&self, a: usize, b: usize) -> usize {
+    fn apply(self, a: usize, b: usize) -> usize {
         match self {
             Operator::Add => a + b,
             Operator::Multiply => a * b,

@@ -33,15 +33,14 @@ enum Block {
 impl Block {
     fn size(&self) -> usize {
         match self {
-            Self::Free(size) => *size,
-            Self::Used(_, size) => *size,
+            Self::Free(size) | Self::Used(_, size) => *size,
         }
     }
 
     fn free_size(&self) -> usize {
         match self {
             Self::Free(size) => *size,
-            _ => 0,
+            Self::Used(..) => 0,
         }
     }
 
@@ -54,7 +53,7 @@ impl Block {
 }
 
 fn marge_chunked(used: &[usize], available: &[usize]) -> usize {
-    let mut used_blocks = VecDeque::from_iter(used.iter().copied().enumerate());
+    let mut used_blocks = used.iter().copied().enumerate().collect::<VecDeque<_>>();
     let mut available = available.to_vec();
     let mut iter_avail = available.iter_mut();
     let mut layout = vec![];
@@ -103,9 +102,7 @@ fn merge_blocks(used: &[usize], available: &[usize]) -> usize {
         let block_size = block_list[block_index].size();
         let candidate = (0..block_index)
             .map(|j| (j, &block_list[j]))
-            .find(|(_, block)| {
-                block.free_size() >= block_size
-            });
+            .find(|(_, block)| block.free_size() >= block_size);
         if let Some((j, block)) = candidate {
             let free_size = block.free_size();
             match free_size.cmp(&block_size) {
@@ -118,7 +115,7 @@ fn merge_blocks(used: &[usize], available: &[usize]) -> usize {
                 std::cmp::Ordering::Equal => {
                     block_list.swap(j, block_index);
                 }
-                _ => {}
+                std::cmp::Ordering::Less => {}
             }
         }
     }
