@@ -1,4 +1,6 @@
 #![deny(clippy::pedantic)]
+use std::time::Duration;
+
 use clap::Parser;
 pub mod days;
 pub mod solution;
@@ -8,7 +10,7 @@ use days::get_day;
 use solution::Part;
 
 /// Advent of Code 2024 runner implemented in Rust.
-/// 
+///
 /// This is not necessarily an optimal set of solutions, but it works.
 /// If you're interested in how this works, the code is available here:
 /// <https://github.com/Snapstromegon/rustvent-of-code-24>
@@ -23,7 +25,7 @@ struct Args {
     example: bool,
 }
 
-fn run_part(day: usize, part: Part, example: bool) {
+fn run_part(day: usize, part: Part, example: bool) -> Result<(usize, Duration), String> {
     let input = utils::read_input(day, example, part.into());
     if let Some(solution) = get_day(day) {
         if let Some(input) = input {
@@ -31,22 +33,33 @@ fn run_part(day: usize, part: Part, example: bool) {
             let result = solution.run(&input, part);
             let duration = start.elapsed();
             if let Some(result) = result {
-                println!("Part {part}: {result} - {duration:?}");
+                Ok((result, duration))
             } else {
-                println!("Part {part}: not implemented for day {day}");
+                Err(format!("Day {day}.{part} not implemented"))
             }
         } else {
-            println!("Part {part}: no input found for day {day} (example: {example})");
+            Err(format!(
+                "No input for day {day}.{part}"
+            ))
         }
     } else {
-        println!("Day {day} not implemented");
+        Err(format!("Day {day} not implemented"))
     }
 }
 
 fn run_day(day: usize, example: bool) {
-    println!("Day {day}:");
-    run_part(day, Part::One, example);
-    run_part(day, Part::Two, example);
+    let res1 = run_part(day, Part::One, example);
+    let res2 = run_part(day, Part::Two, example);
+
+    print!("{day: >2} | ");
+    match res1 {
+        Ok((result, duration)) => print!("{result: >16} {duration: >10?} | "),
+        Err(e) => print!("{e: >27} | "),
+    }
+    match res2 {
+        Ok((result, duration)) => println!("{result: >16} {duration: >10?}"),
+        Err(e) => println!("{e: >27}"),
+    }
 }
 
 fn main() {
