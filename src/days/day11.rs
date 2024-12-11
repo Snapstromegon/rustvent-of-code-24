@@ -1,4 +1,8 @@
-use std::collections::HashMap;
+use rayon::prelude::*;
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+};
 
 use crate::solution::Solution;
 
@@ -6,24 +10,26 @@ use crate::solution::Solution;
 struct Stone(usize);
 
 impl Stone {
-    fn blink(&self, n: usize, cache: &mut HashMap<usize, HashMap<usize, usize>>) -> usize {
+    fn blink(&self, n: usize, cache: Arc<RwLock<HashMap<usize, HashMap<usize, usize>>>>) -> usize {
         if n == 0 {
             1
         } else {
-            if let Some(&result) = cache.get(&self.0).and_then(|m| m.get(&n)) {
+            if let Some(&result) = cache.read().unwrap().get(&self.0).and_then(|m| m.get(&n)) {
                 return result;
             }
             let count = if self.0 == 0 {
-                Stone(1).blink(n - 1, cache)
+                Stone(1).blink(n - 1, cache.clone())
             } else if self.0.ilog10() % 2 == 1 {
                 let factor = 10usize.pow((self.0.ilog10() + 1) / 2);
                 let left = Stone(self.0 / factor);
                 let right = Stone(self.0 - left.0 * factor);
-                left.blink(n - 1, cache) + right.blink(n - 1, cache)
+                left.blink(n - 1, cache.clone()) + right.blink(n - 1, cache.clone())
             } else {
-                Stone(self.0 * 2024).blink(n - 1, cache)
+                Stone(self.0 * 2024).blink(n - 1, cache.clone())
             };
             cache
+                .write()
+                .unwrap()
                 .entry(self.0)
                 .or_insert_with(HashMap::new)
                 .insert(n, count);
@@ -44,14 +50,22 @@ pub struct Day;
 impl Solution for Day {
     fn part1(&self, input: &str) -> Option<usize> {
         let stones = parse_input(input);
-        let mut cache = HashMap::new();
-        Some(stones.iter().map(|stone| stone.blink(25,&mut cache)).sum())
+        Some(
+            stones
+                .par_iter()
+                .map(|stone| stone.blink(25, Arc::new(RwLock::new(HashMap::new()))))
+                .sum(),
+        )
     }
 
     fn part2(&self, input: &str) -> Option<usize> {
         let stones = parse_input(input);
-        let mut cache = HashMap::new();
-        Some(stones.iter().map(|stone| stone.blink(75,&mut cache)).sum())
+        Some(
+            stones
+                .par_iter()
+                .map(|stone| stone.blink(75, Arc::new(RwLock::new(HashMap::new()))))
+                .sum(),
+        )
     }
 }
 
