@@ -1,6 +1,7 @@
 use std::{collections::HashSet, str::FromStr};
 
 use crate::solution::Solution;
+use rayon::prelude::*;
 
 struct TopMap {
     map: Vec<Vec<u8>>,
@@ -61,17 +62,17 @@ impl TopMap {
     }
 
     fn get_scores_sum(&self) -> usize {
-        let mut scores_sum = 0;
-        for (y, row) in self.map.iter().enumerate() {
-            for (x, cell) in row.iter().enumerate() {
-                if *cell == 0 {
-                    let found_nines = self.search_paths(x, y, 1);
-                    scores_sum += found_nines.len();
-                }
-            }
-        }
-
-        scores_sum
+        self.map
+            .par_iter()
+            .enumerate()
+            .map(|(y, row)| -> usize {
+                row.par_iter()
+                    .enumerate()
+                    .filter(|(_, cell)| **cell == 0)
+                    .map(|(x, _)| self.search_paths(x, y, 1).len())
+                    .sum()
+            })
+            .sum()
     }
 
     fn count_paths_to_nine(&self, start_x: usize, start_y: usize, height: u8) -> usize {
@@ -90,15 +91,17 @@ impl TopMap {
     }
 
     fn get_paths_sum(&self) -> usize {
-        let mut scores_sum = 0;
-        for (y, row) in self.map.iter().enumerate() {
-            for (x, cell) in row.iter().enumerate() {
-                if *cell == 0 {
-                    scores_sum += self.count_paths_to_nine(x, y, 1);
-                }
-            }
-        }
-        scores_sum
+        self.map
+            .par_iter()
+            .enumerate()
+            .map(|(y, row)| -> usize {
+                row.par_iter()
+                    .enumerate()
+                    .filter(|(_, cell)| **cell == 0)
+                    .map(|(x, _)| self.count_paths_to_nine(x, y, 1))
+                    .sum()
+            })
+            .sum()
     }
 }
 
