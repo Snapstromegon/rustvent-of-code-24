@@ -7,13 +7,18 @@ pub mod utils;
 use days::get_day;
 use solution::Part;
 
+/// Advent of Code 2024 runner implemented in Rust.
+/// 
+/// This is not necessarily an optimal set of solutions, but it works.
+/// If you're interested in how this works, the code is available here:
+/// https://github.com/Snapstromegon/rustvent-of-code-24
 #[derive(Parser, Debug)]
 struct Args {
-    /// Name of the person to greet
+    /// Day to run - if not set, run all days
     #[arg(short, long)]
     day: Option<usize>,
 
-    /// Number of times to greet
+    /// Use example input instead of challenge input
     #[arg(short, long, default_value_t = false)]
     example: bool,
 }
