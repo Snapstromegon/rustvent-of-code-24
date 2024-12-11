@@ -11,7 +11,7 @@ use solution::Part;
 /// 
 /// This is not necessarily an optimal set of solutions, but it works.
 /// If you're interested in how this works, the code is available here:
-/// https://github.com/Snapstromegon/rustvent-of-code-24
+/// <https://github.com/Snapstromegon/rustvent-of-code-24>
 #[derive(Parser, Debug)]
 struct Args {
     /// Day to run - if not set, run all days

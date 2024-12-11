@@ -10,7 +10,7 @@ use crate::solution::Solution;
 struct Stone(usize);
 
 impl Stone {
-    fn blink(&self, n: usize, cache: Arc<RwLock<HashMap<usize, HashMap<usize, usize>>>>) -> usize {
+    fn blink(self, n: usize, cache: &Arc<RwLock<HashMap<usize, HashMap<usize, usize>>>>) -> usize {
         if n == 0 {
             1
         } else {
@@ -18,20 +18,20 @@ impl Stone {
                 return result;
             }
             let count = if self.0 == 0 {
-                Stone(1).blink(n - 1, cache.clone())
+                Stone(1).blink(n - 1, cache)
             } else if self.0.ilog10() % 2 == 1 {
                 let factor = 10usize.pow((self.0.ilog10() + 1) / 2);
                 let left = Stone(self.0 / factor);
                 let right = Stone(self.0 - left.0 * factor);
-                left.blink(n - 1, cache.clone()) + right.blink(n - 1, cache.clone())
+                left.blink(n - 1, cache) + right.blink(n - 1, cache)
             } else {
-                Stone(self.0 * 2024).blink(n - 1, cache.clone())
+                Stone(self.0 * 2024).blink(n - 1, cache)
             };
             cache
                 .write()
                 .unwrap()
                 .entry(self.0)
-                .or_insert_with(HashMap::new)
+                .or_default()
                 .insert(n, count);
             count
         }
@@ -53,7 +53,7 @@ impl Solution for Day {
         Some(
             stones
                 .par_iter()
-                .map(|stone| stone.blink(25, Arc::new(RwLock::new(HashMap::new()))))
+                .map(|stone| stone.blink(25, &Arc::new(RwLock::new(HashMap::new()))))
                 .sum(),
         )
     }
@@ -63,7 +63,7 @@ impl Solution for Day {
         Some(
             stones
                 .par_iter()
-                .map(|stone| stone.blink(75, Arc::new(RwLock::new(HashMap::new()))))
+                .map(|stone| stone.blink(75, &Arc::new(RwLock::new(HashMap::new()))))
                 .sum(),
         )
     }
