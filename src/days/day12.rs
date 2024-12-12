@@ -1,11 +1,11 @@
-use std::{collections::HashSet, usize};
+use std::collections::HashSet;
 
 use crate::solution::Solution;
 
 fn parse_input(input: &str) -> Vec<Vec<Option<char>>> {
     input
         .lines()
-        .map(|line| line.chars().map(|c| Some(c)).collect())
+        .map(|line| line.chars().map(Some).collect())
         .collect()
 }
 
@@ -47,12 +47,12 @@ impl Region {
     fn perimeter(&self) -> usize {
         let mut perim = 0;
         for (row, col) in &self.squares {
-            perim += self.square_edges(*row, *col).len()
+            perim += self.square_edges(*row, *col).len();
         }
         perim
     }
 
-    fn bounds(&self) -> ((usize, usize), (usize, usize)) {
+    fn bounds(&self) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
         let mut min_row = usize::MAX;
         let mut max_row = 0;
         let mut min_col = usize::MAX;
@@ -65,16 +65,16 @@ impl Region {
             max_col = max_col.max(*col);
         }
 
-        ((min_row, max_row), (min_col, max_col))
+        (min_row..max_row, min_col..max_col)
     }
 
     fn sides(&self) -> usize {
-        let bounds = self.bounds();
+        let (row_bounds, col_bounds) = self.bounds();
         let mut res = 0;
-        for row in bounds.0 .0..=bounds.0 .1 {
+        for row in row_bounds.clone() {
             let mut last_up = usize::MAX - 1;
             let mut last_down = usize::MAX - 1;
-            for col in bounds.1 .0..=bounds.1 .1 {
+            for col in col_bounds.clone() {
                 if self.squares.contains(&(row, col)) {
                     let edges = self.square_edges(row, col);
                     if edges.contains(&Direction::Up) {
@@ -93,10 +93,10 @@ impl Region {
             }
         }
 
-        for col in bounds.1 .0..=bounds.1 .1 {
+        for col in col_bounds {
             let mut last_left = usize::MAX - 1;
             let mut last_right = usize::MAX - 1;
-            for row in bounds.0 .0..=bounds.0 .1 {
+            for row in row_bounds.clone() {
                 if self.squares.contains(&(row, col)) {
                     let edges = self.square_edges(row, col);
                     if edges.contains(&Direction::Left) {
@@ -119,7 +119,7 @@ impl Region {
     }
 }
 
-fn flood(map: &Vec<Vec<Option<char>>>, start_row: usize, start_col: usize) -> Region {
+fn flood(map: &[Vec<Option<char>>], start_row: usize, start_col: usize) -> Region {
     let mut region = Region::default();
     let char = map[start_row][start_col].unwrap();
     let mut candidates = vec![(start_row, start_col)];
@@ -143,29 +143,13 @@ fn flood(map: &Vec<Vec<Option<char>>>, start_row: usize, start_col: usize) -> Re
     region
 }
 
-fn part1(mut map: Vec<Vec<Option<char>>>) -> usize {
+fn get_price(mut map: Vec<Vec<Option<char>>>, pricer: fn(region: &Region) -> usize) -> usize {
     let mut total_price = 0;
     for row in 0..map.len() {
         for col in 0..map[0].len() {
             if map[row][col].is_some() {
                 let region = flood(&map, row, col);
-                total_price += region.area() * region.perimeter();
-                for (s_row, s_col) in region.squares {
-                    map[s_row][s_col] = None;
-                }
-            }
-        }
-    }
-    total_price
-}
-
-fn part2(mut map: Vec<Vec<Option<char>>>) -> usize {
-    let mut total_price = 0;
-    for row in 0..map.len() {
-        for col in 0..map[0].len() {
-            if map[row][col].is_some() {
-                let region = flood(&map, row, col);
-                total_price += region.area() * region.sides();
+                total_price += pricer(&region);
                 for (s_row, s_col) in region.squares {
                     map[s_row][s_col] = None;
                 }
@@ -180,12 +164,12 @@ pub struct Day;
 impl Solution for Day {
     fn part1(&self, input: &str) -> Option<usize> {
         let map = parse_input(input);
-        Some(part1(map))
+        Some(get_price(map, |region| region.area() * region.perimeter()))
     }
 
     fn part2(&self, input: &str) -> Option<usize> {
         let map = parse_input(input);
-        Some(part2(map))
+        Some(get_price(map, |region| region.area() * region.sides()))
     }
 }
 
@@ -206,7 +190,7 @@ mod tests {
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(1456082));
+        assert_eq!(Day.part1(&input), Some(1_456_082));
     }
 
     #[test]
@@ -217,6 +201,6 @@ mod tests {
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(872382));
+        assert_eq!(Day.part2(&input), Some(872_382));
     }
 }

@@ -85,17 +85,17 @@ mod tests {
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(186424));
+        assert_eq!(Day.part1(&input), Some(186_424));
     }
 
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(65601038650482));
+        assert_eq!(Day.part2(&input), Some(65_601_038_650_482));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(219838428124832));
+        assert_eq!(Day.part2(&input), Some(219_838_428_124_832));
     }
 }
