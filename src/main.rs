@@ -53,12 +53,12 @@ fn run_day(day: usize, example: bool) {
 
     print!("{day: >2} | ");
     match res1 {
-        Ok((result, duration)) => print!("{result: >16} {duration: >10?} | "),
-        Err(e) => print!("{e: >27} | "),
+        Ok((result, duration)) => print!("{result: >16} {duration: >7.1?} | "),
+        Err(e) => print!("{e: >24} | "),
     }
     match res2 {
-        Ok((result, duration)) => println!("{result: >16} {duration: >10?}"),
-        Err(e) => println!("{e: >27}"),
+        Ok((result, duration)) => println!("{result: >16} {duration: >7.1?}"),
+        Err(e) => println!("{e: >24}"),
     }
 }
 
