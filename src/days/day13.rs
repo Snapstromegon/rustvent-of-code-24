@@ -1,6 +1,5 @@
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_sign_loss)]
-#![allow(clippy::cast_precision_loss)]
 use std::str::FromStr;
 extern crate nalgebra;
 use nalgebra::{Matrix2, Vector2};
@@ -10,24 +9,26 @@ use crate::solution::Solution;
 
 #[derive(Debug, Clone, Copy)]
 struct Machine {
-    button_a_vec: (usize, usize),
-    button_b_vec: (usize, usize),
-    price_location: (usize, usize),
+    button_a_vec: (f64, f64),
+    button_b_vec: (f64, f64),
+    price_location: (f64, f64),
 }
 
 impl Machine {
     fn steps_to_price(&self) -> (usize, usize) {
         let equations = Matrix2::new(
-            self.button_a_vec.0 as f64,
-            self.button_b_vec.0 as f64,
-            self.button_a_vec.1 as f64,
-            self.button_b_vec.1 as f64,
+            self.button_a_vec.0,
+            self.button_b_vec.0,
+            self.button_a_vec.1,
+            self.button_b_vec.1,
         );
-        let solutions = Vector2::new(self.price_location.0 as f64, self.price_location.1 as f64);
+        let solutions = Vector2::new(self.price_location.0, self.price_location.1);
         let decomp = equations.lu();
         if let Some(res) = decomp.solve(&solutions) {
-            if (res.x.round() - res.x).abs() <= 0.001 && (res.y.round() - res.y).abs() <= 0.001 {
-                return (res.x.round() as usize, res.y.round() as usize);
+            let rounded_x = res.x.round();
+            let rounded_y = res.y.round();
+            if (rounded_x - res.x).abs() <= 0.001 && (rounded_y - res.y).abs() <= 0.001 {
+                return (rounded_x as usize, rounded_y as usize);
             }
         }
         (0, 0)
@@ -84,8 +85,8 @@ impl Solution for Day {
                 .iter()
                 .map(|machine| Machine {
                     price_location: (
-                        machine.price_location.0 + 10_000_000_000_000,
-                        machine.price_location.1 + 10_000_000_000_000,
+                        machine.price_location.0 + 10_000_000_000_000.0,
+                        machine.price_location.1 + 10_000_000_000_000.0,
                     ),
                     ..*machine
                 })
