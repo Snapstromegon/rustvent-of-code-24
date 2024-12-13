@@ -52,7 +52,7 @@ impl Region {
         perim
     }
 
-    fn bounds(&self) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
+    fn bounds(&self) -> (std::ops::RangeInclusive<usize>, std::ops::RangeInclusive<usize>) {
         let mut min_row = usize::MAX;
         let mut max_row = 0;
         let mut min_col = usize::MAX;
@@ -65,7 +65,7 @@ impl Region {
             max_col = max_col.max(*col);
         }
 
-        (min_row..max_row+1, min_col..max_col+1)
+        (min_row..=max_row, min_col..=max_col)
     }
 
     fn sides(&self) -> usize {
