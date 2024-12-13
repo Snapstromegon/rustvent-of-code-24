@@ -67,10 +67,13 @@ fn main() {
     if let Some(day) = args.day {
         run_day(day, args.example);
     } else {
+        let start = std::time::Instant::now();
         for day in 1..25 {
             if get_day(day).is_some() {
                 run_day(day, args.example);
             }
         }
+        let duration = start.elapsed();
+        println!("Total time: {duration:.1?}", duration = duration);
     }
 }
