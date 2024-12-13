@@ -1,5 +1,6 @@
 use std::str::FromStr;
-
+extern crate nalgebra;
+use nalgebra::{Matrix2, Vector2};
 use regex::Regex;
 
 use crate::solution::Solution;
@@ -12,34 +13,21 @@ struct Machine {
 }
 
 impl Machine {
-    fn vec_x_fac(&self) -> f64 {
-        self.button_a_vec.0 as f64 / self.button_b_vec.0 as f64
-    }
-    fn vec_y_fac(&self) -> f64 {
-        self.button_a_vec.1 as f64 / self.button_b_vec.1 as f64
-    }
-
-    fn vecs_same_direction(&self) -> bool {
-        self.vec_x_fac() == self.vec_y_fac()
-    }
-
-    fn vecs_whole_multiple(&self) -> bool {
-        self.vecs_same_direction() && self.vec_x_fac().fract() == 0.0
-    }
-
-    /// Price as a function of steps:
-    /// price = 3a+b
-    /// p = a*x + b*y
-    /// p_x = a*x_1 + b*x_2
-    /// p_y = a*y_1 + b*y_2
     fn steps_to_price(&self) -> (usize, usize) {
-        for a in 1..=100 {
-            for b in 1..=100 {
-                let pos_x = self.button_a_vec.0 * a + self.button_b_vec.0 * b;
-                let pos_y = self.button_a_vec.1 * a + self.button_b_vec.1 * b;
-                if self.price_location == (pos_x, pos_y) {
-                    return (a, b);
-                }
+        let equations = Matrix2::new(
+            self.button_a_vec.0 as f64,
+            self.button_b_vec.0 as f64,
+            self.button_a_vec.1 as f64,
+            self.button_b_vec.1 as f64,
+        );
+        let solutions = Vector2::new(self.price_location.0 as f64, self.price_location.1 as f64);
+        // println!("{self:?}\n{equations:?}");
+        let decomp = equations.lu();
+        if let Some(res) = decomp.solve(&solutions) {
+            if (res.x.round() - res.x).abs() <= 0.001
+                && (res.y.round() - res.y).abs() <= 0.001
+            {
+                return (res.x.round() as usize, res.y.round() as usize);
             }
         }
         return (0, 0);
@@ -98,13 +86,15 @@ impl Solution for Day {
     }
 
     fn part2(&self, input: &str) -> Option<usize> {
-        return None;
         let machines = parse_machines(input);
         Some(
             machines
                 .iter()
                 .map(|machine| Machine {
-                    price_location: (machine.price_location.0 + 10_000_000_000_000, machine.price_location.1 + 10_000_000_000_000),
+                    price_location: (
+                        machine.price_location.0 + 10_000_000_000_000,
+                        machine.price_location.1 + 10_000_000_000_000,
+                    ),
                     ..machine.clone()
                 })
                 .map(|machine| machine.min_tokens_price())
@@ -129,17 +119,17 @@ mod tests {
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(39996));
+        assert_eq!(Day.part1(&input), Some(39_996));
     }
 
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(875_318_608_908));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(73_267_584_326_867));
     }
 }
