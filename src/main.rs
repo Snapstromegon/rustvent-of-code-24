@@ -74,6 +74,6 @@ fn main() {
             }
         }
         let duration = start.elapsed();
-        println!("Total time: {duration:.1?}", duration = duration);
+        println!("Total time: {duration:.1?}");
     }
 }
