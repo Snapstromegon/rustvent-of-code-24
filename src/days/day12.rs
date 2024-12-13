@@ -65,7 +65,7 @@ impl Region {
             max_col = max_col.max(*col);
         }
 
-        (min_row..max_row, min_col..max_col)
+        (min_row..max_row+1, min_col..max_col+1)
     }
 
     fn sides(&self) -> usize {
