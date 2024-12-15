@@ -49,16 +49,16 @@ impl FromStr for Robot {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut number_parts = s.split_whitespace().map(|x| x.split("=").nth(1).unwrap());
+        let mut number_parts = s.split_whitespace().map(|x| x.split('=').nth(1).unwrap());
         let mut pos = number_parts
             .next()
             .unwrap()
-            .split(",")
+            .split(',')
             .map(|x| x.parse().unwrap());
         let mut vec = number_parts
             .next()
             .unwrap()
-            .split(",")
+            .split(',')
             .map(|x| x.parse().unwrap());
         Ok(Self {
             x: pos.next().unwrap(),
@@ -79,8 +79,7 @@ fn max_robots_block(robots: &[Robot], (width, height): (isize, isize)) -> usize 
         let mut visited = HashSet::new();
         let mut candidates = vec![];
         candidates.push((robot.x, robot.y));
-        while !candidates.is_empty() {
-            let (x, y) = candidates.pop().unwrap();
+        while let Some((x, y)) = candidates.pop() {
             if !visited.contains(&(x, y)) && robots_set.contains(&(x, y)) {
                 visited.insert((x, y));
                 if x > 0 {
@@ -118,7 +117,7 @@ impl Solution for Day {
             })
             .iter()
             .skip(1)
-            .fold(1, |acc, x| acc * x);
+            .product();
         Some(res)
     }
 
@@ -128,7 +127,7 @@ impl Solution for Day {
             for robot in &mut robots {
                 robot.step(1, size);
             }
-            if max_robots_block(&robots, size)>100 {
+            if max_robots_block(&robots, size) > 100 {
                 return Some(i);
             }
         }
@@ -152,7 +151,7 @@ mod tests {
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(211773366));
+        assert_eq!(Day.part1(&input), Some(211_773_366));
     }
 
     #[test]
