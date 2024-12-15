@@ -18,16 +18,21 @@ enum State {
     Empty,
 }
 
-impl Display for State {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let c = match self {
+impl State {
+    fn to_string(self, widened: bool) -> char {
+        match self {
             State::Robot => '@',
-            State::Box => 'O',
+            State::Box => {
+                if widened {
+                    '['
+                } else {
+                    'O'
+                }
+            }
             State::Box2 => ']',
             State::Wall => '#',
             State::Empty => '.',
-        };
-        write!(f, "{c}")
+        }
     }
 }
 
@@ -109,20 +114,23 @@ impl FromStr for Warehouse {
         let mut blocks = HashSet::new();
         let mut walls = HashSet::new();
 
+        let mut size = (0, 0);
+
         for (row, line) in s.lines().enumerate() {
             for (col, c) in line.chars().enumerate() {
-                match c {
-                    '@' => {
+                size = (row, col);
+                match c.to_string().parse()? {
+                    State::Robot => {
                         robot = (row, col);
                     }
-                    'O' => {
+                    State::Box => {
                         blocks.insert((row, col));
                     }
-                    '#' => {
+                    State::Wall => {
                         walls.insert((row, col));
                     }
-                    '.' => (),
-                    _ => return Err(format!("Invalid character: {c}")),
+                    State::Empty => (),
+                    State::Box2 => return Err(format!("Invalid character: {c}")),
                 };
             }
         }
@@ -131,7 +139,7 @@ impl FromStr for Warehouse {
             blocks,
             walls,
             robot,
-            size: (s.lines().next().unwrap().chars().count(), s.lines().count()),
+            size,
             widened: false,
         })
     }
@@ -141,19 +149,12 @@ impl Display for Warehouse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for row in 0..self.size.0 {
             for col in 0..self.size.1 {
-                write!(
-                    f,
-                    "{}",
-                    self.get_state((row, col))
-                        .to_string()
-                        .replace('O', if self.widened { "[" } else { "O" })
-                )?;
+                write!(f, "{}", self.get_state((row, col)).to_string(self.widened))?;
             }
             writeln!(f)?;
         }
 
-        write!(f, "Robot: {:?}", self.robot)?;
-        Ok(())
+        write!(f, "Robot: {:?}", self.robot)
     }
 }
 
@@ -187,7 +188,6 @@ impl Warehouse {
                 }
             }
             self.blocks.extend(new_blocks);
-
             self.robot = self.robot + direction;
         }
     }
@@ -207,36 +207,29 @@ impl Warehouse {
         if self.get_state(new_pos) == State::Empty {
             return Some(changes);
         }
-        match direction {
-            Direction::Left | Direction::Right => {
+        match (self.widened, direction) {
+            (_, Direction::Left | Direction::Right) | (false, _) => {
                 if let Some(other_changes) = self.can_move_in_dir(new_pos, direction) {
                     changes.extend(other_changes);
                 } else {
                     return None;
                 }
             }
-            Direction::Up | Direction::Down => {
-                if self.widened {
-                    let (left_changes, right_changes) = match self.get_state(new_pos) {
-                        State::Box2 => (
-                            self.can_move_in_dir((new_pos.0, new_pos.1 - 1), direction),
-                            self.can_move_in_dir(new_pos, direction),
-                        ),
-                        State::Box => (
-                            self.can_move_in_dir(new_pos, direction),
-                            self.can_move_in_dir((new_pos.0, new_pos.1 + 1), direction),
-                        ),
-                        _ => unreachable!("Invalid state: {:?}", self.get_state(new_pos)),
-                    };
-                    if let (Some(left_changes), Some(right_changes)) = (left_changes, right_changes)
-                    {
-                        changes.extend(left_changes);
-                        changes.extend(right_changes);
-                    } else {
-                        return None;
-                    }
-                } else if let Some(other_changes) = self.can_move_in_dir(new_pos, direction) {
-                    changes.extend(other_changes);
+            (true, Direction::Up | Direction::Down) => {
+                let (left_changes, right_changes) = match self.get_state(new_pos) {
+                    State::Box2 => (
+                        self.can_move_in_dir((new_pos.0, new_pos.1 - 1), direction),
+                        self.can_move_in_dir(new_pos, direction),
+                    ),
+                    State::Box => (
+                        self.can_move_in_dir(new_pos, direction),
+                        self.can_move_in_dir((new_pos.0, new_pos.1 + 1), direction),
+                    ),
+                    s => unreachable!("Invalid state: {:?}", s),
+                };
+                if let (Some(left_changes), Some(right_changes)) = (left_changes, right_changes) {
+                    changes.extend(left_changes);
+                    changes.extend(right_changes);
                 } else {
                     return None;
                 }
@@ -252,37 +245,27 @@ impl Warehouse {
         }
     }
 
-    fn gps_top_left(&self) -> usize {
+    fn gps_sum(&self) -> usize {
         self.blocks.iter().map(|(row, col)| row * 100 + col).sum()
     }
 
     fn widen(&mut self) {
         self.widened = true;
-        self.blocks = self
-            .blocks
-            .iter()
-            .map(|&(row, col)| (row, col * 2))
-            .collect();
-        self.walls = self
-            .walls
-            .iter()
-            .map(|&(row, col)| (row, col * 2))
-            .collect();
-        self.robot = (self.robot.0, self.robot.1 * 2);
-        self.size = (self.size.0, self.size.1 * 2);
+        let wider = |(a, b): &(usize, usize)| (*a, b * 2);
+        self.blocks = self.blocks.iter().map(wider).collect();
+        self.walls = self.walls.iter().map(wider).collect();
+        self.robot = wider(&self.robot);
+        self.size = wider(&self.size);
     }
 }
 
 fn parse_input(input: &str) -> (Warehouse, Vec<Direction>) {
     let (map_part, directions_part) = input.split_once("\n\n").unwrap();
-
     let warehouse = map_part.parse().unwrap();
-
     let directions = directions_part
         .chars()
         .flat_map(|c| c.to_string().parse())
         .collect();
-
     (warehouse, directions)
 }
 
@@ -292,14 +275,14 @@ impl Solution for Day {
     fn part1(&self, input: &str) -> Option<usize> {
         let (mut warehouse, directions) = parse_input(input);
         warehouse.apply_directions(&directions);
-        Some(warehouse.gps_top_left())
+        Some(warehouse.gps_sum())
     }
 
     fn part2(&self, input: &str) -> Option<usize> {
         let (mut warehouse, directions) = parse_input(input);
         warehouse.widen();
         warehouse.apply_directions(&directions);
-        Some(warehouse.gps_top_left())
+        Some(warehouse.gps_sum())
     }
 }
 
