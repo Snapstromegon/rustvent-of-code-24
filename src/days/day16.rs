@@ -56,7 +56,6 @@ struct DijkstraEntry {
     pos: (usize, usize),
     dir: Direction,
     cost: usize,
-    coming_from: Vec<(usize, usize)>,
 }
 
 impl PartialOrd for DijkstraEntry {
@@ -92,11 +91,11 @@ impl FromStr for Maze {
                     '.' => row.push(false),
                     'S' => {
                         row.push(false);
-                        start = (x, y);
+                        start = (y, x);
                     }
                     'E' => {
                         row.push(false);
-                        end = (x, y);
+                        end = (y, x);
                     }
                     _ => panic!("Invalid character in maze"),
                 }
@@ -141,10 +140,12 @@ impl Maze {
             pos: self.start,
             dir: Direction::East,
             cost: 0,
-            coming_from: vec![],
         });
 
         while let Some(entry) = candidates.pop() {
+            if entry.pos == self.end {
+                continue;
+            }
             let (base_cost, _) = *costs
                 .get(&(entry.pos, entry.dir))
                 .unwrap_or(&(0usize, vec![]));
@@ -160,13 +161,6 @@ impl Maze {
             for (dir, cost) in valid_dirs {
                 let next_pos = entry.pos + *dir;
                 let next_cost = base_cost + cost;
-                if next_pos == self.end {
-                    costs
-                        .entry((next_pos, *dir))
-                        .or_insert((next_cost, vec![]))
-                        .1
-                        .push((entry.pos, entry.dir));
-                }
                 if let Some(&(prev_cost, _)) = costs.get(&(next_pos, *dir)) {
                     if next_cost < prev_cost {
                         costs.insert((next_pos, *dir), (next_cost, vec![(entry.pos, entry.dir)]));
@@ -174,7 +168,6 @@ impl Maze {
                             pos: next_pos,
                             dir: *dir,
                             cost: next_cost,
-                            coming_from: vec![entry.pos],
                         });
                     } else if next_cost == prev_cost {
                         costs
@@ -189,7 +182,6 @@ impl Maze {
                         pos: next_pos,
                         dir: *dir,
                         cost: next_cost,
-                        coming_from: vec![entry.pos],
                     });
                 }
             }
@@ -219,47 +211,35 @@ impl Maze {
     }
 
     fn pos_on_best_paths(&self) -> usize {
+        let min_cost = self.min_cost();
         let costs = self.dijkstra_to_end();
         let mut visited = HashSet::new();
-        let mut candidates = vec![
+        let mut candidates: Vec<((usize, usize), Direction)> = vec![
             (self.end, Direction::North),
             (self.end, Direction::East),
             (self.end, Direction::South),
             (self.end, Direction::West),
-        ];
+        ]
+        .into_iter()
+        .filter(|end| {
+            if let Some(x) = costs.get(end) {
+                x.0 == min_cost
+            } else {
+                false
+            }
+        })
+        .collect();
         while let Some(pos) = candidates.pop() {
             if !visited.contains(&pos) {
-                println!("{} - {:?}", candidates.len(), pos);
-                println!("{:?}", costs.get(&pos));
                 visited.insert(pos);
                 if let Some((_, prev_pos)) = costs.get(&pos) {
                     for &prev_pos in prev_pos {
-                        println!("Pushing {:?}", prev_pos);
                         candidates.push(prev_pos);
                     }
                 }
             }
         }
-        let visitx = HashSet::<(usize, usize)>::from_iter(visited.iter().map(|(pos, _)| *pos));
-
-        for (y, row) in self.walls.iter().enumerate() {
-            for (x, &wall) in row.iter().enumerate() {
-                if (x, y) == self.start {
-                    print!("S");
-                } else if (x, y) == self.end {
-                    print!("E");
-                } else if wall {
-                    print!("#");
-                } else if visitx.contains(&(y, x)) {
-                    print!("O");
-                } else {
-                    print!(".");
-                }
-            }
-            println!("");
-        }
-
-        visitx.len()
+        HashSet::<(usize, usize)>::from_iter(visited.iter().map(|(pos, _)| *pos)).len()
     }
 }
 
@@ -301,12 +281,19 @@ mod tests {
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(45));
     }
     #[test]
-    #[ignore]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(513));
+    }
+
+    #[test]
+    fn direction_adds() {
+        assert_eq!((5, 5) + Direction::North, (4, 5));
+        assert_eq!((5, 5) + Direction::East, (5, 6));
+        assert_eq!((5, 5) + Direction::South, (6, 5));
+        assert_eq!((5, 5) + Direction::West, (5, 4));
     }
 }
