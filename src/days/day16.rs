@@ -1,3 +1,5 @@
+#![allow(clippy::cast_possible_wrap)]
+#![allow(clippy::cast_sign_loss)]
 use std::{
     collections::{BinaryHeap, HashMap, HashSet},
     fmt::{self, Display, Formatter},
@@ -6,6 +8,9 @@ use std::{
 };
 
 use crate::solution::Solution;
+
+type Position = (usize, usize);
+type DirPos = (Position, Direction);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Direction {
@@ -35,8 +40,8 @@ impl Direction {
     }
 }
 
-impl Add<Direction> for (usize, usize) {
-    type Output = (usize, usize);
+impl Add<Direction> for Position {
+    type Output = Position;
     fn add(self, rhs: Direction) -> Self::Output {
         let d = match rhs {
             Direction::North => (-1, 0),
@@ -53,7 +58,7 @@ impl Add<Direction> for (usize, usize) {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 struct DijkstraEntry {
-    pos: (usize, usize),
+    pos: Position,
     dir: Direction,
     cost: usize,
 }
@@ -72,8 +77,8 @@ impl Ord for DijkstraEntry {
 
 struct Maze {
     walls: Vec<Vec<bool>>,
-    start: (usize, usize),
-    end: (usize, usize),
+    start: Position,
+    end: Position,
 }
 
 impl FromStr for Maze {
@@ -129,10 +134,10 @@ impl Display for Maze {
 impl Maze {
     fn dijkstra_to_end(
         &self,
-    ) -> HashMap<((usize, usize), Direction), (usize, Vec<((usize, usize), Direction)>)> {
+    ) -> HashMap<DirPos, (usize, Vec<DirPos>)> {
         let mut costs: HashMap<
-            ((usize, usize), Direction),
-            (usize, Vec<((usize, usize), Direction)>),
+            DirPos,
+            (usize, Vec<DirPos>),
         > = HashMap::new();
 
         let mut candidates = BinaryHeap::new();
@@ -162,19 +167,26 @@ impl Maze {
                 let next_pos = entry.pos + *dir;
                 let next_cost = base_cost + cost;
                 if let Some(&(prev_cost, _)) = costs.get(&(next_pos, *dir)) {
-                    if next_cost < prev_cost {
-                        costs.insert((next_pos, *dir), (next_cost, vec![(entry.pos, entry.dir)]));
-                        candidates.push(DijkstraEntry {
-                            pos: next_pos,
-                            dir: *dir,
-                            cost: next_cost,
-                        });
-                    } else if next_cost == prev_cost {
-                        costs
-                            .get_mut(&(next_pos, *dir))
-                            .unwrap()
-                            .1
-                            .push((entry.pos, entry.dir));
+                    match next_cost.cmp(&prev_cost) {
+                        std::cmp::Ordering::Less => {
+                            costs.insert(
+                                (next_pos, *dir),
+                                (next_cost, vec![(entry.pos, entry.dir)]),
+                            );
+                            candidates.push(DijkstraEntry {
+                                pos: next_pos,
+                                dir: *dir,
+                                cost: next_cost,
+                            });
+                        }
+                        std::cmp::Ordering::Equal => {
+                            costs
+                                .get_mut(&(next_pos, *dir))
+                                .unwrap()
+                                .1
+                                .push((entry.pos, entry.dir));
+                        }
+                        std::cmp::Ordering::Greater => {}
                     }
                 } else {
                     costs.insert((next_pos, *dir), (next_cost, vec![(entry.pos, entry.dir)]));
@@ -199,13 +211,7 @@ impl Maze {
             costs.get(&(self.end, Direction::West)),
         ]
         .iter()
-        .filter_map(|x| {
-            if let Some(value) = x {
-                Some(value.0)
-            } else {
-                None
-            }
-        })
+        .filter_map(|x| x.map(|x| x.0))
         .min()
         .unwrap()
     }
@@ -214,7 +220,7 @@ impl Maze {
         let min_cost = self.min_cost();
         let costs = self.dijkstra_to_end();
         let mut visited = HashSet::new();
-        let mut candidates: Vec<((usize, usize), Direction)> = vec![
+        let mut candidates: Vec<DirPos> = vec![
             (self.end, Direction::North),
             (self.end, Direction::East),
             (self.end, Direction::South),
@@ -239,7 +245,11 @@ impl Maze {
                 }
             }
         }
-        HashSet::<(usize, usize)>::from_iter(visited.iter().map(|(pos, _)| *pos)).len()
+        visited
+            .iter()
+            .map(|(pos, _)| *pos)
+            .collect::<HashSet<Position>>()
+            .len()
     }
 }
 
