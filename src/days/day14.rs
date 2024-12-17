@@ -1,6 +1,6 @@
 use std::{collections::HashSet, str::FromStr};
 
-use crate::solution::Solution;
+use crate::solution::{Solution, SolvedValue};
 
 fn parse_input(input: &str) -> ((isize, isize), Vec<Robot>) {
     let robots: Vec<Robot> = input.lines().map(|x| x.parse().unwrap()).collect();
@@ -104,7 +104,7 @@ fn max_robots_block(robots: &[Robot], (width, height): (isize, isize)) -> usize 
 pub struct Day;
 
 impl Solution for Day {
-    fn part1(&self, input: &str) -> Option<usize> {
+    fn part1(&self, input: &str) -> Option<SolvedValue> {
         let (size, mut robots) = parse_input(input);
         for robot in &mut robots {
             robot.step(100, size);
@@ -117,18 +117,18 @@ impl Solution for Day {
             })
             .iter()
             .skip(1)
-            .product();
+            .product::<usize>().into();
         Some(res)
     }
 
-    fn part2(&self, input: &str) -> Option<usize> {
+    fn part2(&self, input: &str) -> Option<SolvedValue> {
         let (size, mut robots) = parse_input(input);
         for i in 1..10_000 {
             for robot in &mut robots {
                 robot.step(1, size);
             }
             if max_robots_block(&robots, size) > 100 {
-                return Some(i);
+                return Some(i.into());
             }
         }
         None
@@ -146,18 +146,18 @@ mod tests {
     #[test]
     fn test_part1_example() {
         let input = read_input(DAY, true, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(12));
+        assert_eq!(Day.part1(&input), Some(12.into()));
     }
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(211_773_366));
+        assert_eq!(Day.part1(&input), Some(211_773_366.into()));
     }
 
     #[test]
     #[ignore = "takes too long"]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(7344));
+        assert_eq!(Day.part2(&input), Some(7344.into()));
     }
 }

@@ -7,7 +7,7 @@ pub mod solution;
 pub mod utils;
 
 use days::get_day;
-use solution::Part;
+use solution::{Part, SolvedValue};
 
 /// Advent of Code 2024 runner implemented in Rust.
 ///
@@ -25,7 +25,7 @@ struct Args {
     example: bool,
 }
 
-fn run_part(day: usize, part: Part, example: bool) -> Result<(usize, Duration), String> {
+fn run_part(day: usize, part: Part, example: bool) -> Result<(SolvedValue, Duration), String> {
     let input = utils::read_input(day, example, part.into());
     if let Some(solution) = get_day(day) {
         if let Some(input) = input {
@@ -53,11 +53,11 @@ fn run_day(day: usize, example: bool) {
 
     print!("{day: >2} | ");
     match res1 {
-        Ok((result, duration)) => print!("{result: >16} {duration: >7.1?} | "),
+        Ok((result, duration)) => print!("{result} {duration: >7.1?} | "),
         Err(e) => print!("{e: >24} | "),
     }
     match res2 {
-        Ok((result, duration)) => println!("{result: >16} {duration: >7.1?}"),
+        Ok((result, duration)) => println!("{result} {duration: >7.1?}"),
         Err(e) => println!("{e: >24}"),
     }
 }

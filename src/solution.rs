@@ -1,14 +1,47 @@
 use std::fmt::Display;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SolvedValue {
+    Usize(usize),
+    String(String),
+}
+
+impl From<usize> for SolvedValue {
+    fn from(value: usize) -> Self {
+        Self::Usize(value)
+    }
+}
+
+impl From<&str> for SolvedValue {
+    fn from(value: &str) -> Self {
+        Self::String(value.to_string())
+    }
+}
+
+impl From<String> for SolvedValue {
+    fn from(value: String) -> Self {
+        Self::String(value)
+    }
+}
+
+impl Display for SolvedValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SolvedValue::Usize(value) => write!(f, "{value: >20}"),
+            SolvedValue::String(value) => write!(f, "{value: >20}"),
+        }
+    }
+}
+
 pub trait Solution {
-    fn part1(&self, _input: &str) -> Option<usize> {
+    fn part1(&self, _input: &str) -> Option<SolvedValue> {
         None
     }
-    fn part2(&self, _input: &str) -> Option<usize> {
+    fn part2(&self, _input: &str) -> Option<SolvedValue> {
         None
     }
 
-    fn run(&self, input: &str, part: Part) -> Option<usize> {
+    fn run(&self, input: &str, part: Part) -> Option<SolvedValue> {
         match part {
             Part::One => self.part1(input),
             Part::Two => self.part2(input),

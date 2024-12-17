@@ -7,7 +7,7 @@ use std::{
     str::FromStr,
 };
 
-use crate::solution::Solution;
+use crate::solution::{Solution, SolvedValue};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum State {
@@ -272,17 +272,17 @@ fn parse_input(input: &str) -> (Warehouse, Vec<Direction>) {
 pub struct Day;
 
 impl Solution for Day {
-    fn part1(&self, input: &str) -> Option<usize> {
+    fn part1(&self, input: &str) -> Option<SolvedValue> {
         let (mut warehouse, directions) = parse_input(input);
         warehouse.apply_directions(&directions);
-        Some(warehouse.gps_sum())
+        Some(warehouse.gps_sum().into())
     }
 
-    fn part2(&self, input: &str) -> Option<usize> {
+    fn part2(&self, input: &str) -> Option<SolvedValue> {
         let (mut warehouse, directions) = parse_input(input);
         warehouse.widen();
         warehouse.apply_directions(&directions);
-        Some(warehouse.gps_sum())
+        Some(warehouse.gps_sum().into())
     }
 }
 
@@ -297,22 +297,22 @@ mod tests {
     #[test]
     fn test_part1_example() {
         let input = read_input(DAY, true, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(10_092));
+        assert_eq!(Day.part1(&input), Some(10_092.into()));
     }
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(1_514_353));
+        assert_eq!(Day.part1(&input), Some(1_514_353.into()));
     }
 
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(9_021));
+        assert_eq!(Day.part2(&input), Some(9_021.into()));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(1_533_076));
+        assert_eq!(Day.part2(&input), Some(1_533_076.into()));
     }
 }

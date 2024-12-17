@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::solution::Solution;
+use crate::solution::{Solution, SolvedValue};
 
 fn parse_input(input: &str) -> Vec<Vec<Option<char>>> {
     input
@@ -162,14 +162,14 @@ fn get_price(mut map: Vec<Vec<Option<char>>>, pricer: fn(region: &Region) -> usi
 pub struct Day;
 
 impl Solution for Day {
-    fn part1(&self, input: &str) -> Option<usize> {
+    fn part1(&self, input: &str) -> Option<SolvedValue> {
         let map = parse_input(input);
-        Some(get_price(map, |region| region.area() * region.perimeter()))
+        Some(get_price(map, |region| region.area() * region.perimeter()).into())
     }
 
-    fn part2(&self, input: &str) -> Option<usize> {
+    fn part2(&self, input: &str) -> Option<SolvedValue> {
         let map = parse_input(input);
-        Some(get_price(map, |region| region.area() * region.sides()))
+        Some(get_price(map, |region| region.area() * region.sides()).into())
     }
 }
 
@@ -184,23 +184,23 @@ mod tests {
     #[test]
     fn test_part1_example() {
         let input = read_input(DAY, true, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(140));
+        assert_eq!(Day.part1(&input), Some(140.into()));
     }
 
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(1_456_082));
+        assert_eq!(Day.part1(&input), Some(1_456_082.into()));
     }
 
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(80));
+        assert_eq!(Day.part2(&input), Some(80.into()));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(872_382));
+        assert_eq!(Day.part2(&input), Some(872_382.into()));
     }
 }

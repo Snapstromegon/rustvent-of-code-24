@@ -7,7 +7,7 @@ use std::{
     str::FromStr,
 };
 
-use crate::solution::Solution;
+use crate::solution::{Solution, SolvedValue};
 
 type Position = (usize, usize);
 type DirPos = (Position, Direction);
@@ -256,16 +256,16 @@ impl Maze {
 pub struct Day;
 
 impl Solution for Day {
-    fn part1(&self, input: &str) -> Option<usize> {
+    fn part1(&self, input: &str) -> Option<SolvedValue> {
         let maze: Maze = input.parse().unwrap();
         let cost = maze.min_cost();
-        Some(cost)
+        Some(cost.into())
     }
 
-    fn part2(&self, input: &str) -> Option<usize> {
+    fn part2(&self, input: &str) -> Option<SolvedValue> {
         let maze = input.parse::<Maze>().unwrap();
         let count = maze.pos_on_best_paths();
-        Some(count)
+        Some(count.into())
     }
 }
 
@@ -280,23 +280,23 @@ mod tests {
     #[test]
     fn test_part1_example() {
         let input = read_input(DAY, true, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(7036));
+        assert_eq!(Day.part1(&input), Some(7_036.into()));
     }
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(95444));
+        assert_eq!(Day.part1(&input), Some(95_444.into()));
     }
 
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(45));
+        assert_eq!(Day.part2(&input), Some(45.into()));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(513));
+        assert_eq!(Day.part2(&input), Some(513.into()));
     }
 
     #[test]

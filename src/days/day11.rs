@@ -4,7 +4,7 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use crate::solution::Solution;
+use crate::solution::{Solution, SolvedValue};
 
 #[derive(Debug, Clone, Copy)]
 struct Stone(usize);
@@ -48,23 +48,25 @@ fn parse_input(input: &str) -> Vec<Stone> {
 pub struct Day;
 
 impl Solution for Day {
-    fn part1(&self, input: &str) -> Option<usize> {
+    fn part1(&self, input: &str) -> Option<SolvedValue> {
         let stones = parse_input(input);
         Some(
             stones
                 .par_iter()
                 .map(|stone| stone.blink(25, &Arc::new(RwLock::new(HashMap::new()))))
-                .sum(),
+                .sum::<usize>()
+                .into(),
         )
     }
 
-    fn part2(&self, input: &str) -> Option<usize> {
+    fn part2(&self, input: &str) -> Option<SolvedValue> {
         let stones = parse_input(input);
         Some(
             stones
                 .par_iter()
                 .map(|stone| stone.blink(75, &Arc::new(RwLock::new(HashMap::new()))))
-                .sum(),
+                .sum::<usize>()
+                .into(),
         )
     }
 }
@@ -80,22 +82,22 @@ mod tests {
     #[test]
     fn test_part1_example() {
         let input = read_input(DAY, true, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(55312));
+        assert_eq!(Day.part1(&input), Some(55_312.into()));
     }
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(186_424));
+        assert_eq!(Day.part1(&input), Some(186_424.into()));
     }
 
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(65_601_038_650_482));
+        assert_eq!(Day.part2(&input), Some(65_601_038_650_482.into()));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(219_838_428_124_832));
+        assert_eq!(Day.part2(&input), Some(219_838_428_124_832.into()));
     }
 }

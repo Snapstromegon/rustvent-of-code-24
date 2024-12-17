@@ -1,4 +1,4 @@
-use crate::solution::Solution;
+use crate::solution::{Solution, SolvedValue};
 
 #[derive(Debug, Clone, Copy)]
 enum Direction {
@@ -84,7 +84,7 @@ fn check_x_mas(grid: &[Vec<char>], x: usize, y: usize) -> bool {
 pub struct Day;
 
 impl Solution for Day {
-    fn part1(&self, input: &str) -> Option<usize> {
+    fn part1(&self, input: &str) -> Option<SolvedValue> {
         let mut res = 0;
         let grid: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
         for y in 0..grid.len() {
@@ -98,10 +98,10 @@ impl Solution for Day {
                 }
             }
         }
-        Some(res)
+        Some(res.into())
     }
 
-    fn part2(&self, input: &str) -> Option<usize> {
+    fn part2(&self, input: &str) -> Option<SolvedValue> {
         let mut res = 0;
         let grid: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
 
@@ -112,7 +112,7 @@ impl Solution for Day {
                 }
             }
         }
-        Some(res)
+        Some(res.into())
     }
 }
 
@@ -127,22 +127,22 @@ mod tests {
     #[test]
     fn test_part1_example() {
         let input = read_input(DAY, true, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(18));
+        assert_eq!(Day.part1(&input), Some(18.into()));
     }
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(2599));
+        assert_eq!(Day.part1(&input), Some(2599.into()));
     }
 
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(9));
+        assert_eq!(Day.part2(&input), Some(9.into()));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(1948));
+        assert_eq!(Day.part2(&input), Some(1948.into()));
     }
 }

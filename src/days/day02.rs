@@ -1,4 +1,4 @@
-use crate::solution::Solution;
+use crate::solution::{Solution, SolvedValue};
 
 pub struct Day;
 
@@ -66,23 +66,24 @@ fn check_is_save_part2(report: &[i32], has_skipped: bool) -> bool {
 }
 
 impl Solution for Day {
-    fn part1(&self, input: &str) -> Option<usize> {
+    fn part1(&self, input: &str) -> Option<SolvedValue> {
         let reports = get_reports(input);
         Some(
             reports
                 .iter()
                 .filter(|report| report_okay(report).is_none())
-                .count(),
+                .count()
+                .into(),
         )
     }
 
-    fn part2(&self, input: &str) -> Option<usize> {
+    fn part2(&self, input: &str) -> Option<SolvedValue> {
         let reports = get_reports(input);
         let okay_reports = reports
             .iter()
             .filter(|report| check_is_save_part2(report, false))
             .count();
-        Some(okay_reports)
+        Some(okay_reports.into())
     }
 }
 
@@ -97,29 +98,29 @@ mod tests {
     #[test]
     fn test_part1_example() {
         let input = read_input(DAY, true, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(2));
+        assert_eq!(Day.part1(&input), Some(2.into()));
     }
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(407));
+        assert_eq!(Day.part1(&input), Some(407.into()));
     }
 
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(4));
+        assert_eq!(Day.part2(&input), Some(4.into()));
     }
 
     #[test]
     fn test_part2_custom1() {
         let input = "12 7 9 7 5 3";
-        assert_eq!(Day.part2(input), Some(1));
+        assert_eq!(Day.part2(input), Some(1.into()));
     }
 
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(459));
+        assert_eq!(Day.part2(&input), Some(459.into()));
     }
 }

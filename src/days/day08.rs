@@ -4,7 +4,7 @@ use std::{
     str::FromStr,
 };
 
-use crate::solution::Solution;
+use crate::solution::{Solution, SolvedValue};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Position {
@@ -120,14 +120,14 @@ impl FromStr for AntennaGrid {
 pub struct Day;
 
 impl Solution for Day {
-    fn part1(&self, input: &str) -> Option<usize> {
+    fn part1(&self, input: &str) -> Option<SolvedValue> {
         let grid: AntennaGrid = input.parse().unwrap();
-        Some(grid.get_antinodes(false).len())
+        Some(grid.get_antinodes(false).len().into())
     }
 
-    fn part2(&self, input: &str) -> Option<usize> {
+    fn part2(&self, input: &str) -> Option<SolvedValue> {
         let grid: AntennaGrid = input.parse().unwrap();
-        Some(grid.get_antinodes(true).len())
+        Some(grid.get_antinodes(true).len().into())
     }
 }
 
@@ -142,22 +142,22 @@ mod tests {
     #[test]
     fn test_part1_example() {
         let input = read_input(DAY, true, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(14));
+        assert_eq!(Day.part1(&input), Some(14.into()));
     }
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(269));
+        assert_eq!(Day.part1(&input), Some(269.into()));
     }
 
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(34));
+        assert_eq!(Day.part2(&input), Some(34.into()));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(949));
+        assert_eq!(Day.part2(&input), Some(949.into()));
     }
 }

@@ -1,13 +1,13 @@
-use crate::solution::Solution;
+use crate::solution::{Solution, SolvedValue};
 
 pub struct Day;
 
 impl Solution for Day {
-    fn part1(&self, _input: &str) -> Option<usize> {
+    fn part1(&self, _input: &str) -> Option<SolvedValue> {
         None
     }
 
-    fn part2(&self, _input: &str) -> Option<usize> {
+    fn part2(&self, _input: &str) -> Option<SolvedValue> {
         None
     }
 }

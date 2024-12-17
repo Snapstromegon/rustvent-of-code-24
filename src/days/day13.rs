@@ -5,7 +5,7 @@ extern crate nalgebra;
 use nalgebra::{Matrix2, Vector2};
 use regex::Regex;
 
-use crate::solution::Solution;
+use crate::solution::{Solution, SolvedValue};
 
 #[derive(Debug, Clone, Copy)]
 struct Machine {
@@ -73,12 +73,18 @@ fn parse_machines(input: &str) -> Vec<Machine> {
 pub struct Day;
 
 impl Solution for Day {
-    fn part1(&self, input: &str) -> Option<usize> {
+    fn part1(&self, input: &str) -> Option<SolvedValue> {
         let machines = parse_machines(input);
-        Some(machines.iter().map(Machine::min_tokens_price).sum())
+        Some(
+            machines
+                .iter()
+                .map(Machine::min_tokens_price)
+                .sum::<usize>()
+                .into(),
+        )
     }
 
-    fn part2(&self, input: &str) -> Option<usize> {
+    fn part2(&self, input: &str) -> Option<SolvedValue> {
         let machines = parse_machines(input);
         Some(
             machines
@@ -91,7 +97,8 @@ impl Solution for Day {
                     ..*machine
                 })
                 .map(|machine| machine.min_tokens_price())
-                .sum(),
+                .sum::<usize>()
+                .into(),
         )
     }
 }
@@ -107,22 +114,22 @@ mod tests {
     #[test]
     fn test_part1_example() {
         let input = read_input(DAY, true, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(480));
+        assert_eq!(Day.part1(&input), Some(480.into()));
     }
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(39_996));
+        assert_eq!(Day.part1(&input), Some(39_996.into()));
     }
 
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(875_318_608_908));
+        assert_eq!(Day.part2(&input), Some(875_318_608_908.into()));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(73_267_584_326_867));
+        assert_eq!(Day.part2(&input), Some(73_267_584_326_867.into()));
     }
 }

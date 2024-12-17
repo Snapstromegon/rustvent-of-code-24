@@ -1,7 +1,7 @@
 use rayon::prelude::*;
 use std::str::FromStr;
 
-use crate::solution::Solution;
+use crate::solution::{Solution, SolvedValue};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum Direction {
@@ -168,13 +168,13 @@ impl FromStr for Field {
 pub struct Day;
 
 impl Solution for Day {
-    fn part1(&self, input: &str) -> Option<usize> {
+    fn part1(&self, input: &str) -> Option<SolvedValue> {
         let mut field: Field = input.parse().expect("Field not parsable");
         field.simulate_to_exit();
-        Some(field.visited.len())
+        Some(field.visited.len().into())
     }
 
-    fn part2(&self, input: &str) -> Option<usize> {
+    fn part2(&self, input: &str) -> Option<SolvedValue> {
         let field: Field = input.parse().expect("Field not parsable");
 
         let mut cloned = field.clone();
@@ -190,7 +190,7 @@ impl Solution for Day {
             })
             .count();
 
-        Some(looping_count)
+        Some(looping_count.into())
     }
 }
 
@@ -205,22 +205,22 @@ mod tests {
     #[test]
     fn test_part1_example() {
         let input = read_input(DAY, true, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(41));
+        assert_eq!(Day.part1(&input), Some(41.into()));
     }
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(4789));
+        assert_eq!(Day.part1(&input), Some(4789.into()));
     }
 
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(6));
+        assert_eq!(Day.part2(&input), Some(6.into()));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(1304));
+        assert_eq!(Day.part2(&input), Some(1304.into()));
     }
 }

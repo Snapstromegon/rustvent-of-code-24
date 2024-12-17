@@ -1,6 +1,6 @@
 use std::{collections::HashSet, str::FromStr};
 
-use crate::solution::Solution;
+use crate::solution::{Solution, SolvedValue};
 use rayon::prelude::*;
 
 struct TopMap {
@@ -17,7 +17,7 @@ impl FromStr for TopMap {
             .lines()
             .map(|line| {
                 line.chars()
-                    .map(|c| c.to_string().parse().unwrap())
+                    .map(|c| c.try_into().unwrap())
                     .collect()
             })
             .collect();
@@ -108,14 +108,14 @@ impl TopMap {
 pub struct Day;
 
 impl Solution for Day {
-    fn part1(&self, input: &str) -> Option<usize> {
+    fn part1(&self, input: &str) -> Option<SolvedValue> {
         let top_map: TopMap = input.parse().unwrap();
-        Some(top_map.get_scores_sum())
+        Some(top_map.get_scores_sum().into())
     }
 
-    fn part2(&self, input: &str) -> Option<usize> {
+    fn part2(&self, input: &str) -> Option<SolvedValue> {
         let top_map: TopMap = input.parse().unwrap();
-        Some(top_map.get_paths_sum())
+        Some(top_map.get_paths_sum().into())
     }
 }
 
@@ -130,22 +130,22 @@ mod tests {
     #[test]
     fn test_part1_example() {
         let input = read_input(DAY, true, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(36));
+        assert_eq!(Day.part1(&input), Some(36.into()));
     }
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), Some(811));
+        assert_eq!(Day.part1(&input), Some(811.into()));
     }
 
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(81));
+        assert_eq!(Day.part2(&input), Some(81.into()));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(1794));
+        assert_eq!(Day.part2(&input), Some(1_794.into()));
     }
 }
