@@ -222,6 +222,7 @@ impl Solution for Day {
 
             if similar_length > max_similar {
                 if max_similar > 1 {
+                    // This is probably specific to my input
                     offset_size <<= 3;
                 }
                 max_similar = similar_length;
