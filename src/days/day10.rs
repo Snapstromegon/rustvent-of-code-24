@@ -17,7 +17,7 @@ impl FromStr for TopMap {
             .lines()
             .map(|line| {
                 line.chars()
-                    .map(|c| c.try_into().unwrap())
+                    .map(|c| c.to_string().parse().unwrap())
                     .collect()
             })
             .collect();
