@@ -1,6 +1,8 @@
+#![allow(clippy::cast_possible_wrap)]
 use std::{collections::HashSet, str::FromStr};
 
 use crate::solution::{Solution, SolvedValue};
+use rayon::prelude::*;
 
 fn parse_input(input: &str) -> ((isize, isize), Vec<Robot>) {
     let robots: Vec<Robot> = input.lines().map(|x| x.parse().unwrap()).collect();
@@ -117,21 +119,23 @@ impl Solution for Day {
             })
             .iter()
             .skip(1)
-            .product::<usize>().into();
+            .product::<usize>()
+            .into();
         Some(res)
     }
 
     fn part2(&self, input: &str) -> Option<SolvedValue> {
-        let (size, mut robots) = parse_input(input);
-        for i in 1..10_000 {
-            for robot in &mut robots {
-                robot.step(1, size);
-            }
-            if max_robots_block(&robots, size) > 100 {
-                return Some(i.into());
-            }
-        }
-        None
+        let (size, robots) = parse_input(input);
+        (1..10_000)
+            .into_par_iter()
+            .find_any(|&i| {
+                let mut robots_clone = robots.clone();
+                for robot in &mut robots_clone {
+                    robot.step(i as isize, size);
+                }
+                max_robots_block(&robots_clone, size) > 100
+            })
+            .map(SolvedValue::from)
     }
 }
 
@@ -155,7 +159,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "takes too long"]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
         assert_eq!(Day.part2(&input), Some(7344.into()));
