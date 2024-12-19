@@ -19,6 +19,7 @@ pub mod day15;
 pub mod day16;
 pub mod day17;
 pub mod day18;
+pub mod day19;
 
 #[must_use]
 pub fn get_day(day: usize) -> Option<Box<dyn Solution>> {
@@ -42,6 +43,7 @@ pub fn get_day(day: usize) -> Option<Box<dyn Solution>> {
       16 => Some(Box::new(day16::Day)),
       17 => Some(Box::new(day17::Day)),
       18 => Some(Box::new(day18::Day)),
+      19 => Some(Box::new(day19::Day)),
       _ => None,
   }
 }
