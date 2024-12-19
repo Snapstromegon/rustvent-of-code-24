@@ -1,6 +1,6 @@
 #![allow(clippy::cast_possible_wrap)]
 #![allow(clippy::cast_sign_loss)]
-use std::{collections::HashSet, str::FromStr};
+use std::str::FromStr;
 
 use crate::solution::{Solution, SolvedValue};
 use rayon::prelude::*;
