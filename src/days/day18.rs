@@ -1,9 +1,6 @@
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_wrap)]
-use std::{
-    collections::{HashSet, VecDeque},
-    str::FromStr,
-};
+use std::{collections::VecDeque, str::FromStr};
 
 use rayon::prelude::*;
 
@@ -18,15 +15,20 @@ struct Maze {
 }
 
 impl Maze {
-    fn get_corrupted_after_bytes(&self, bytes: usize) -> HashSet<Position> {
-        self.drop_list.iter().take(bytes).copied().collect()
+    fn get_corrupted_after_bytes(&self, bytes: usize) -> Vec<Vec<bool>> {
+        let mut distances = vec![vec![false; self.size + 1]; self.size + 1];
+        for block in self.drop_list.iter().take(bytes) {
+            distances[block.1][block.0] = true;
+        }
+        distances
     }
 
     fn find_distance_to_end(&self, bytes: usize) -> Option<usize> {
         let corrupted = self.get_corrupted_after_bytes(bytes);
         let mut distances = vec![vec![None; self.size + 1]; self.size + 1];
 
-        let mut queue: VecDeque<Position> = vec![(0, 0)].into();
+        let mut queue: VecDeque<Position> = VecDeque::with_capacity(self.size * self.size);
+        queue.push_back((0, 0));
         distances[0][0] = Some(0);
 
         while let Some((x, y)) = queue.pop_front() {
@@ -49,7 +51,7 @@ impl Maze {
                 let new_x = new_x as usize;
                 let new_y = new_y as usize;
 
-                if corrupted.contains(&(new_x, new_y)) {
+                if corrupted[new_y][new_x] {
                     continue;
                 }
 

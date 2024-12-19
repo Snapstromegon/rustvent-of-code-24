@@ -1,4 +1,5 @@
 #![allow(clippy::cast_possible_wrap)]
+#![allow(clippy::cast_sign_loss)]
 use std::{collections::HashSet, str::FromStr};
 
 use crate::solution::{Solution, SolvedValue};
@@ -71,19 +72,20 @@ impl FromStr for Robot {
     }
 }
 
-fn max_robots_block(robots: &[Robot], (width, height): (isize, isize)) -> usize {
-    let mut robots_set = HashSet::new();
+fn has_robots_block(robots: &[Robot], (width, height): (isize, isize), size: usize) -> bool {
+    let mut robots_set = vec![vec![false; width as usize]; height as usize];
     for robot in robots {
-        robots_set.insert((robot.x, robot.y));
+        robots_set[robot.y as usize][robot.x as usize] = true;
     }
-    let mut max_block_size = 0;
     for robot in robots {
         let mut visited = HashSet::new();
         let mut candidates = vec![];
+        let mut count = 0;
         candidates.push((robot.x, robot.y));
         while let Some((x, y)) = candidates.pop() {
-            if !visited.contains(&(x, y)) && robots_set.contains(&(x, y)) {
+            if !visited.contains(&(x, y)) && robots_set[y as usize][x as usize] {
                 visited.insert((x, y));
+                count += 1;
                 if x > 0 {
                     candidates.push((x - 1, y));
                 }
@@ -97,10 +99,12 @@ fn max_robots_block(robots: &[Robot], (width, height): (isize, isize)) -> usize 
                     candidates.push((x, y + 1));
                 }
             }
+            if count > size {
+                return true;
+            }
         }
-        max_block_size = max_block_size.max(visited.len());
     }
-    max_block_size
+    false
 }
 
 pub struct Day;
@@ -131,10 +135,11 @@ impl Solution for Day {
             .find_any(|&i| {
                 let mut robots_clone = robots.clone();
                 for robot in &mut robots_clone {
-                    robot.step(i as isize, size);
+                    robot.step(i, size);
                 }
-                max_robots_block(&robots_clone, size) > 100
+                has_robots_block(&robots_clone, size, 100)
             })
+            .map(|x| x as usize)
             .map(SolvedValue::from)
     }
 }
@@ -161,6 +166,6 @@ mod tests {
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), Some(7344.into()));
+        assert_eq!(Day.part2(&input), Some(7_344.into()));
     }
 }

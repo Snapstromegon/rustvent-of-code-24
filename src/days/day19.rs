@@ -1,4 +1,9 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+};
+
+use rayon::prelude::*;
 
 use crate::solution::{Solution, SolvedValue};
 
@@ -13,12 +18,12 @@ fn parse_input(input: &str) -> (Vec<&str>, Vec<&str>) {
 fn design_possible_count(
     design: &str,
     towels: &[&str],
-    known_results: &mut HashMap<String, usize>,
+    known_results: &Arc<RwLock<HashMap<String, usize>>>,
 ) -> usize {
     if design.is_empty() {
         return 1;
     }
-    if let Some(&result) = known_results.get(design) {
+    if let Some(&result) = known_results.read().unwrap().get(design) {
         return result;
     }
     let result = towels
@@ -26,7 +31,12 @@ fn design_possible_count(
         .filter(|&&towel| design.starts_with(towel))
         .map(|towel| design_possible_count(&design[towel.len()..], towels, known_results))
         .sum();
-    known_results.insert(design.to_string(), result);
+    if known_results.read().unwrap().get(design).is_none() {
+        known_results
+            .write()
+            .unwrap()
+            .insert(design.to_string(), result);
+    }
     result
 }
 
@@ -35,20 +45,20 @@ pub struct Day;
 impl Solution for Day {
     fn part1(&self, input: &str) -> Option<SolvedValue> {
         let (towels, designs) = parse_input(input);
-        let mut known_results = HashMap::new();
+        let known_results = Arc::new(RwLock::new(HashMap::new()));
         let count = designs
-            .iter()
-            .filter(|design| design_possible_count(design, &towels, &mut known_results) > 0)
+            .par_iter()
+            .filter(|design| design_possible_count(design, &towels, &known_results) > 0)
             .count();
         Some(count.into())
     }
 
     fn part2(&self, input: &str) -> Option<SolvedValue> {
         let (towels, designs) = parse_input(input);
-        let mut known_results = HashMap::new();
+        let known_results = Arc::new(RwLock::new(HashMap::new()));
         let count: usize = designs
-            .iter()
-            .map(|design| design_possible_count(design, &towels, &mut known_results))
+            .par_iter()
+            .map(|design| design_possible_count(design, &towels, &known_results))
             .sum();
         Some(count.into())
     }
