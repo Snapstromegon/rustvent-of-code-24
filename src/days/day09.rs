@@ -11,11 +11,11 @@ fn parse_input(input: &str) -> (usize, Vec<usize>, Vec<usize>) {
     let mut size = 0;
 
     while let Some(c) = chars.next() {
-        let used_size = c.to_string().parse().unwrap();
+        let used_size = c.to_digit(10).unwrap() as usize;
         used.push(used_size);
         size += used_size;
         if let Some(c) = chars.next() {
-            let available_size = c.to_string().parse().unwrap();
+            let available_size = c.to_digit(10).unwrap() as usize;
             available.push(available_size);
             size += available_size;
         }
