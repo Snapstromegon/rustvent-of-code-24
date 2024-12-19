@@ -78,13 +78,15 @@ fn has_robots_block(robots: &[Robot], (width, height): (isize, isize), size: usi
         robots_set[robot.y as usize][robot.x as usize] = true;
     }
     for robot in robots {
-        let mut visited = HashSet::new();
-        let mut candidates = vec![];
+        if !robots_set[robot.y as usize][robot.x as usize] {
+            continue;
+        }
+        let mut candidates = Vec::with_capacity(size);
         let mut count = 0;
         candidates.push((robot.x, robot.y));
         while let Some((x, y)) = candidates.pop() {
-            if !visited.contains(&(x, y)) && robots_set[y as usize][x as usize] {
-                visited.insert((x, y));
+            if robots_set[y as usize][x as usize] {
+                robots_set[y as usize][x as usize] = false;
                 count += 1;
                 if x > 0 {
                     candidates.push((x - 1, y));
@@ -137,7 +139,7 @@ impl Solution for Day {
                 for robot in &mut robots_clone {
                     robot.step(i, size);
                 }
-                has_robots_block(&robots_clone, size, 100)
+                has_robots_block(&robots_clone, size, 20)
             })
             .map(|x| x as usize)
             .map(SolvedValue::from)

@@ -1,3 +1,4 @@
+#![allow(clippy::cast_possible_wrap)]
 use rayon::prelude::*;
 use std::str::FromStr;
 
@@ -60,8 +61,8 @@ struct Field {
     guard_dir: Direction,
     visited: Vec<Position>,
     visited_with_dir: Vec<Vec<Option<Direction>>>,
-    rows: usize,
-    cols: usize,
+    rows: isize,
+    cols: isize,
 }
 
 impl Field {
@@ -81,12 +82,13 @@ impl Field {
         }
     }
 
-    fn guard_step(&mut self) {
+    fn guard_step(&mut self, record_visited: bool) {
         while !self.is_step_possible() {
             self.guard_dir = self.guard_dir.turn_right();
         }
-        if self.grid[self.guard_pos.row.unsigned_abs()][self.guard_pos.col.unsigned_abs()]
-            == GridCell::Open
+        if record_visited
+            && self.grid[self.guard_pos.row.unsigned_abs()][self.guard_pos.col.unsigned_abs()]
+                == GridCell::Open
         {
             self.visited.push(self.guard_pos);
         }
@@ -96,13 +98,12 @@ impl Field {
     }
 
     fn is_guard_inside(&self) -> bool {
-        (0..isize::try_from(self.rows).unwrap()).contains(&self.guard_pos.row)
-            && (0..isize::try_from(self.cols).unwrap()).contains(&self.guard_pos.col)
+        (0..self.rows).contains(&self.guard_pos.row) && (0..self.cols).contains(&self.guard_pos.col)
     }
 
     fn simulate_to_exit(&mut self) {
         while self.is_guard_inside() {
-            self.guard_step();
+            self.guard_step(true);
         }
     }
 
@@ -114,7 +115,7 @@ impl Field {
         {
             self.visited_with_dir[self.guard_pos.row.unsigned_abs()]
                 [self.guard_pos.col.unsigned_abs()] = Some(self.guard_dir);
-            self.guard_step();
+            self.guard_step(false);
         }
 
         self.is_guard_inside()
@@ -159,8 +160,8 @@ impl FromStr for Field {
             guard_dir: Direction::Up,
             visited: Vec::new(),
             visited_with_dir,
-            rows: rows + 1,
-            cols: cols + 1,
+            rows: rows as isize + 1,
+            cols: cols as isize + 1,
         })
     }
 }
