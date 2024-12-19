@@ -36,11 +36,10 @@ impl State {
     }
 }
 
-impl FromStr for State {
-    type Err = String;
+impl TryFrom<char> for State {
+    type Error = String;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let c = s.chars().next().unwrap();
+    fn try_from(c: char) -> Result<Self, Self::Error> {
         let state = match c {
             '@' => State::Robot,
             'O' => State::Box,
@@ -60,16 +59,16 @@ enum Direction {
     Right,
 }
 
-impl FromStr for Direction {
-    type Err = String;
+impl TryFrom<char> for Direction {
+    type Error = String;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let direction = match s {
-            "^" => Direction::Up,
-            "v" => Direction::Down,
-            "<" => Direction::Left,
-            ">" => Direction::Right,
-            _ => return Err(format!("Invalid direction: {s}")),
+    fn try_from(c: char) -> Result<Self, Self::Error> {
+        let direction = match c {
+            '^' => Direction::Up,
+            'v' => Direction::Down,
+            '<' => Direction::Left,
+            '>' => Direction::Right,
+            _ => return Err(format!("Invalid direction: {c}")),
         };
         Ok(direction)
     }
@@ -119,7 +118,7 @@ impl FromStr for Warehouse {
         for (row, line) in s.lines().enumerate() {
             for (col, c) in line.chars().enumerate() {
                 size = (row, col);
-                match c.to_string().parse()? {
+                match State::try_from(c)? {
                     State::Robot => {
                         robot = (row, col);
                     }
@@ -264,7 +263,7 @@ fn parse_input(input: &str) -> (Warehouse, Vec<Direction>) {
     let warehouse = map_part.parse().unwrap();
     let directions = directions_part
         .chars()
-        .flat_map(|c| c.to_string().parse())
+        .filter_map(|c| Direction::try_from(c).ok())
         .collect();
     (warehouse, directions)
 }

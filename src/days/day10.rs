@@ -1,3 +1,5 @@
+#![allow(clippy::cast_possible_truncation)]
+
 use std::{collections::HashSet, str::FromStr};
 
 use crate::solution::{Solution, SolvedValue};
@@ -17,7 +19,7 @@ impl FromStr for TopMap {
             .lines()
             .map(|line| {
                 line.chars()
-                    .map(|c| c.to_string().parse().unwrap())
+                    .map(|c| c.to_digit(10).unwrap() as u8)
                     .collect()
             })
             .collect();
