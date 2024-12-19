@@ -10,11 +10,11 @@ use crate::solution::{Solution, SolvedValue};
 struct Stone(usize);
 
 impl Stone {
-    fn blink(self, n: usize, cache: &Arc<RwLock<HashMap<usize, HashMap<usize, usize>>>>) -> usize {
+    fn blink(self, n: usize, cache: &Arc<RwLock<HashMap<(usize, usize), usize>>>) -> usize {
         if n == 0 {
             1
         } else {
-            if let Some(&result) = cache.read().unwrap().get(&self.0).and_then(|m| m.get(&n)) {
+            if let Some(&result) = cache.read().unwrap().get(&(self.0, n)) {
                 return result;
             }
             let count = if self.0 == 0 {
@@ -27,12 +27,7 @@ impl Stone {
             } else {
                 Stone(self.0 * 2024).blink(n - 1, cache)
             };
-            cache
-                .write()
-                .unwrap()
-                .entry(self.0)
-                .or_default()
-                .insert(n, count);
+            cache.write().unwrap().insert((self.0, n), count);
             count
         }
     }
