@@ -1,8 +1,5 @@
 use rayon::prelude::*;
-use std::{
-    collections::HashMap,
-    sync::{Arc, RwLock},
-};
+use std::collections::HashMap;
 
 use crate::solution::{Solution, SolvedValue};
 
@@ -10,11 +7,11 @@ use crate::solution::{Solution, SolvedValue};
 struct Stone(usize);
 
 impl Stone {
-    fn blink(self, n: usize, cache: &Arc<RwLock<HashMap<(usize, usize), usize>>>) -> usize {
+    fn blink(self, n: usize, cache: &mut HashMap<(usize, usize), usize>) -> usize {
         if n == 0 {
             1
         } else {
-            if let Some(&result) = cache.read().unwrap().get(&(self.0, n)) {
+            if let Some(&result) = cache.get(&(self.0, n)) {
                 return result;
             }
             let count = if self.0 == 0 {
@@ -27,7 +24,7 @@ impl Stone {
             } else {
                 Stone(self.0 * 2024).blink(n - 1, cache)
             };
-            cache.write().unwrap().insert((self.0, n), count);
+            cache.insert((self.0, n), count);
             count
         }
     }
@@ -45,10 +42,11 @@ pub struct Day;
 impl Solution for Day {
     fn part1(&self, input: &str) -> Option<SolvedValue> {
         let stones = parse_input(input);
+        let mut cache = HashMap::new();
         Some(
             stones
-                .par_iter()
-                .map(|stone| stone.blink(25, &Arc::new(RwLock::new(HashMap::new()))))
+                .iter()
+                .map(|stone| stone.blink(25, &mut cache))
                 .sum::<usize>()
                 .into(),
         )
@@ -59,7 +57,7 @@ impl Solution for Day {
         Some(
             stones
                 .par_iter()
-                .map(|stone| stone.blink(75, &Arc::new(RwLock::new(HashMap::new()))))
+                .map(|stone| stone.blink(75, &mut HashMap::new()))
                 .sum::<usize>()
                 .into(),
         )
