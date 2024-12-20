@@ -52,10 +52,7 @@ impl Maze {
         let mut candidates = 0;
 
         for i in max_distance.neg()..=max_distance {
-            for j in max_distance.neg()..=max_distance {
-                if i.abs() + j.abs() > max_distance {
-                    continue;
-                }
+            for j in (max_distance-i).neg()..=(max_distance-i) {
                 let y = current.0 as isize + i;
                 let x = current.1 as isize + j;
                 if y < 0 || x < 0 {
