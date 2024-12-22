@@ -9,7 +9,7 @@ fn parse_input(input: &str) -> Vec<(usize, Vec<Position>)> {
         .lines()
         .map(|line| {
             (
-                line.split_once("A").unwrap().0.parse().unwrap(),
+                line.split_once('A').unwrap().0.parse().unwrap(),
                 line.chars()
                     .map(|c| match c {
                         'A' => (3, 2),

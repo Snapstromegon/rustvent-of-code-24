@@ -1,3 +1,5 @@
+#![allow(clippy::cast_possible_wrap)]
+
 use std::collections::{HashMap, HashSet, VecDeque};
 
 use rayon::prelude::*;
@@ -5,7 +7,7 @@ use rayon::prelude::*;
 use crate::solution::{Solution, SolvedValue};
 
 fn mix_and_prune(current: usize, value: usize) -> usize {
-    (current ^ value) % 16777216
+    (current ^ value) % 16_777_216
 }
 
 fn next_secret(current: usize) -> usize {
@@ -38,11 +40,11 @@ impl Solution for Day {
     }
 
     fn part2(&self, input: &str) -> Option<SolvedValue> {
-        let inputs = parse_input(input);
+        let start_secrets = parse_input(input);
 
         let mut global_diffs = HashMap::new();
 
-        inputs.into_iter().for_each(|mut secret| {
+        for mut secret in start_secrets {
             let mut last_price = get_price(secret);
             let mut diffs = VecDeque::with_capacity(4);
             let mut seen = HashSet::new();
@@ -63,9 +65,9 @@ impl Solution for Day {
                     diffs.pop_front();
                 }
             }
-        });
+        }
 
-        Some(global_diffs.values().max().unwrap().clone().into())
+        Some((*global_diffs.values().max().unwrap()).into())
     }
 }
 
