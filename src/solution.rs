@@ -27,8 +27,8 @@ impl From<String> for SolvedValue {
 impl Display for SolvedValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SolvedValue::Usize(value) => write!(f, "{value: >20}"),
-            SolvedValue::String(value) => write!(f, "{value: >20}"),
+            SolvedValue::Usize(value) => write!(f, "{value: >40}"),
+            SolvedValue::String(value) => write!(f, "{value: >40}"),
         }
     }
 }
