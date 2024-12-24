@@ -1,6 +1,6 @@
 #![allow(clippy::cast_possible_wrap)]
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::VecDeque;
 
 use rayon::prelude::*;
 
@@ -26,6 +26,12 @@ fn parse_input(input: &str) -> Vec<usize> {
     input.lines().map(|line| line.parse().unwrap()).collect()
 }
 
+fn get_diff_index(x1: isize, x2: isize, x3: isize, x4: isize) -> usize {
+    ((x1 + 10) * 20isize.pow(3) + (x2 + 10) * 20isize.pow(2) + (x3 + 10) * 20isize + (x4 + 10))
+        .try_into()
+        .unwrap()
+}
+
 pub struct Day;
 
 impl Solution for Day {
@@ -41,13 +47,13 @@ impl Solution for Day {
 
     fn part2(&self, input: &str) -> Option<SolvedValue> {
         let start_secrets = parse_input(input);
-
-        let mut global_diffs = HashMap::new();
+        let mut max = 0;
+        let mut global_diffs = vec![0usize; 20usize.pow(4)];
 
         for mut secret in start_secrets {
             let mut last_price = get_price(secret);
             let mut diffs = VecDeque::with_capacity(4);
-            let mut seen = HashSet::new();
+            let mut seen = vec![false; 20usize.pow(4)];
             for _ in 0..2000 {
                 secret = next_secret(secret);
                 let current_price = get_price(secret);
@@ -55,19 +61,17 @@ impl Solution for Day {
                 last_price = current_price;
                 diffs.push_back(price_diff);
                 if diffs.len() > 3 {
-                    if !seen.contains(&diffs) {
-                        seen.insert(diffs.clone());
-                        global_diffs
-                            .entry(diffs.clone())
-                            .and_modify(|x| *x += current_price)
-                            .or_insert(current_price);
+                    let key = get_diff_index(diffs[0], diffs[1], diffs[2], diffs[3]);
+                    if !seen[key] {
+                        seen[key] = true;
+                        global_diffs[key] += current_price;
+                        max = max.max(global_diffs[key]);
                     }
                     diffs.pop_front();
                 }
             }
         }
-
-        Some((*global_diffs.values().max().unwrap()).into())
+        Some(max.into())
     }
 }
 
