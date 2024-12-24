@@ -1,107 +1,119 @@
+#![allow(clippy::too_many_lines)]
+
 use std::collections::{HashMap, HashSet};
 
 use crate::solution::{Solution, SolvedValue};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-enum LogicGate<'a> {
-    And(&'a str, &'a str),
-    Or(&'a str, &'a str),
-    Xor(&'a str, &'a str),
+enum LogicGate {
+    And(String, String),
+    Or(String, String),
+    Xor(String, String),
 }
 
-impl<'a> LogicGate<'a> {
+impl LogicGate {
     fn eval(
         &self,
-        wire_states: &mut HashMap<&'a str, bool>,
-        gates: &'a HashMap<&str, LogicGate>,
-        visited: &mut HashSet<&'a str>,
+        wire_states: &mut HashMap<String, bool>,
+        gates: &HashMap<String, LogicGate>,
+        visited: &mut HashSet<String>,
     ) -> bool {
         match self {
             LogicGate::And(a, b) => {
-                get_wire_state(wire_states, gates, a, visited)
-                    && get_wire_state(wire_states, gates, b, visited)
+                get_wire_state(wire_states, gates, a.clone(), visited)
+                    && get_wire_state(wire_states, gates, b.clone(), visited)
             }
             LogicGate::Or(a, b) => {
-                get_wire_state(wire_states, gates, a, visited)
-                    || get_wire_state(wire_states, gates, b, visited)
+                get_wire_state(wire_states, gates, a.clone(), visited)
+                    || get_wire_state(wire_states, gates, b.clone(), visited)
             }
             LogicGate::Xor(a, b) => {
-                get_wire_state(wire_states, gates, a, visited)
-                    ^ get_wire_state(wire_states, gates, b, visited)
+                get_wire_state(wire_states, gates, a.clone(), visited)
+                    ^ get_wire_state(wire_states, gates, b.clone(), visited)
             }
         }
     }
 
-    fn parse(s: &'a str) -> Self {
+    fn parse(s: &str) -> Self {
         let parts = s.split(' ').collect::<Vec<_>>();
         match *parts.get(1).unwrap() {
-            "AND" => LogicGate::And(parts[0], parts[2]),
-            "OR" => LogicGate::Or(parts[0], parts[2]),
-            "XOR" => LogicGate::Xor(parts[0], parts[2]),
+            "AND" => LogicGate::And(parts[0].to_string(), parts[2].to_string()),
+            "OR" => LogicGate::Or(parts[0].to_string(), parts[2].to_string()),
+            "XOR" => LogicGate::Xor(parts[0].to_string(), parts[2].to_string()),
             _ => unreachable!("Invalid input"),
         }
     }
+
+    fn values(&self) -> (String, String) {
+        match self {
+            Self::And(a, b) | Self::Or(a, b) | Self::Xor(a, b) => (a.to_owned(), b.to_owned()),
+        }
+    }
+
+    fn is_direct(&self) -> bool {
+        self.values().0.starts_with('x') || self.values().1.starts_with('x')
+    }
 }
 
-fn parse_input(input: &str) -> (HashMap<&str, bool>, HashMap<&str, LogicGate>) {
+fn parse_input(input: &str) -> (HashMap<String, bool>, HashMap<String, LogicGate>) {
     let (initial, gate_setup) = input.split_once("\n\n").unwrap();
 
     let mut map = HashMap::new();
 
     for line in initial.lines() {
         let (key, value) = line.split_once(": ").unwrap();
-        map.insert(key, value == "1");
+        map.insert(key.to_string(), value == "1");
     }
 
     let mut gates = HashMap::new();
 
     for line in gate_setup.lines() {
         let (gate, output) = line.split_once(" -> ").unwrap();
-        gates.insert(output, LogicGate::parse(gate));
+        gates.insert(output.to_string(), LogicGate::parse(gate));
     }
 
     (map, gates)
 }
 
-fn get_wire_state<'a>(
-    wire_states: &mut HashMap<&'a str, bool>,
-    gates: &'a HashMap<&str, LogicGate>,
-    wire: &'a str,
-    visited: &mut HashSet<&'a str>,
+fn get_wire_state(
+    wire_states: &mut HashMap<String, bool>,
+    gates: &HashMap<String, LogicGate>,
+    wire: String,
+    visited: &mut HashSet<String>,
 ) -> bool {
-    if visited.contains(wire) {
+    if visited.contains(&wire) {
         return false;
     }
-    if let Some(state) = wire_states.get(wire) {
+    if let Some(state) = wire_states.get(&wire) {
         return *state;
     }
 
     // println!("Evaluating {wire}");
     // println!("{:?}", gates.get(wire));
 
-    visited.insert(wire);
-    let gate = gates.get(wire).unwrap();
+    visited.insert(wire.clone());
+    let gate = gates.get(&wire).unwrap();
     let res = gate.eval(wire_states, gates, visited);
     wire_states.insert(wire, res);
     res
 }
 
-fn get_system_var<'a>(
-    wire_states: &mut HashMap<&'a str, bool>,
-    gates: &'a HashMap<&str, LogicGate>,
+fn get_system_var(
+    wire_states: &mut HashMap<String, bool>,
+    gates: &HashMap<String, LogicGate>,
     var: char,
 ) -> usize {
     let mut res = 0;
-    let mut var_keys: Vec<&str> = gates
+    let mut var_keys: Vec<String> = gates
         .keys()
         .filter(|k| k.starts_with(var))
-        .copied()
+        .cloned()
         .collect();
     var_keys.extend(
         wire_states
             .keys()
             .filter(|k| k.starts_with(var))
-            .copied()
+            .cloned()
             .collect::<Vec<_>>(),
     );
     var_keys.sort_unstable();
@@ -122,63 +134,102 @@ impl Solution for Day {
     }
 
     fn part2(&self, input: &str) -> Option<SolvedValue> {
-        return None;
-        let (wire_states, gates) = parse_input(input);
+        let (wires, gates) = parse_input(input);
 
-        let gate_outputs = gates.keys().collect::<Vec<_>>();
+        let mut flagged_gates = HashSet::new();
 
-        for (g1, &&gate1) in gate_outputs.iter().enumerate() {
-            for (g2, &&gate2) in gate_outputs.iter().enumerate().skip(g1 + 1) {
-                for (g3, &&gate3) in gate_outputs.iter().enumerate().skip(g2 + 1) {
-                    for (g4, &&gate4) in gate_outputs.iter().enumerate().skip(g3 + 1) {
-                        for (g5, &&gate5) in gate_outputs.iter().enumerate().skip(g4 + 1) {
-                            for (g6, &&gate6) in gate_outputs.iter().enumerate().skip(g5 + 1) {
-                                for (g7, &&gate7) in gate_outputs.iter().enumerate().skip(g6 + 1) {
-                                    for &gate8 in gate_outputs.iter().skip(g7 + 1) {
-                                        let mut wire_states = wire_states.clone();
-                                        let mut gates = gates.clone();
+        let gates0: Vec<_> = gates
+            .iter()
+            .filter(|(_, gate)| gate.is_direct())
+            .filter(|(_, gate)| matches!(gate, LogicGate::Xor(_, _)))
+            .collect();
 
-                                        let tmp_g1 = gates.get(gate1).unwrap().clone();
-                                        gates.insert(gate1, gates.get(gate2).unwrap().clone());
-                                        gates.insert(gate2, tmp_g1);
-
-                                        let tmp_g3 = gates.get(gate3).unwrap().clone();
-                                        gates.insert(gate3, gates.get(gate4).unwrap().clone());
-                                        gates.insert(gate4, tmp_g3);
-
-                                        let tmp_g5 = gates.get(gate5).unwrap().clone();
-                                        gates.insert(gate5, gates.get(gate6).unwrap().clone());
-                                        gates.insert(gate6, tmp_g5);
-
-                                        let tmp_g7 = gates.get(gate7).unwrap().clone();
-                                        gates.insert(gate7, gates.get(gate8).unwrap().clone());
-                                        gates.insert(gate8, tmp_g7);
-
-                                        let x = get_system_var(&mut wire_states, &gates, 'x');
-                                        let y = get_system_var(&mut wire_states, &gates, 'y');
-                                        let z = get_system_var(&mut wire_states, &gates, 'z');
-                                        // println!("x: {x}");
-                                        // println!("y: {y}");
-                                        // println!("z: {z}");
-
-                                        if x + y == z {
-                                            let mut res_touched = [
-                                                gate1, gate2, gate3, gate4, gate5, gate6, gate7,
-                                                gate8,
-                                            ];
-                                            res_touched.sort_unstable();
-                                            return Some(res_touched.join(",").into());
-                                        }
-                                    }
-                                }
-                            }
-                        }
+        flagged_gates.extend(
+            gates0
+                .iter()
+                .filter(|(output, gate)| {
+                    if gate.values().0 == "x00" || gate.values().1 == "x00" {
+                        *output != "z00"
+                    } else if *output == "z00" {
+                        true
+                    } else {
+                        output.starts_with('z')
                     }
-                }
+                })
+                .map(|(output, _)| (*output).to_string()),
+        );
+
+        let gates3: Vec<_> = gates
+            .iter()
+            .filter(|(_, gate)| matches!(gate, LogicGate::Xor(_, _)))
+            .filter(|(_, gate)| !gate.is_direct())
+            .collect();
+
+        flagged_gates.extend(
+            gates3
+                .iter()
+                .filter(|(output, _)| !output.starts_with('z'))
+                .map(|(output, _)| (*output).to_string()),
+        );
+
+        flagged_gates.extend(
+            gates
+                .iter()
+                .filter(|(output, gate)| {
+                    if !output.starts_with('z') {
+                        return false;
+                    }
+                    let is_last = *output == &format!("z{}", wires.len() / 2);
+                    if is_last {
+                        !matches!(gate, LogicGate::Or(_, _))
+                    } else {
+                        !matches!(gate, LogicGate::Xor(_, _))
+                    }
+                })
+                .map(|(output, _)| output.to_string()),
+        );
+
+        let mut check_next = vec![];
+        for (output, gate) in gates0 {
+            if output == "z00" || flagged_gates.contains(output) {
+                continue;
+            }
+            if !gates3
+                .iter()
+                .any(|(_, og)| &og.values().0 == output || &og.values().1 == output)
+            {
+                check_next.push((output, gate));
+                flagged_gates.insert(output.clone());
             }
         }
 
-        None
+        flagged_gates.extend(check_next.iter().map(|(_, gate)| {
+            let intended_result = format!("z{}", &gate.values().0[1..]);
+            let matched = gates3
+                .iter()
+                .find(|(output, _)| *output == &intended_result)
+                .unwrap();
+
+            let or_gate = gates
+                .iter()
+                .filter(|(_, gate)| matches!(gate, LogicGate::Or(_, _)))
+                .find(|(output, _)| {
+                    *output == &matched.1.values().0 || *output == &matched.1.values().1
+                })
+                .unwrap();
+
+            if &matched.1.values().0 != or_gate.0 {
+                matched.1.values().0
+            } else if &matched.1.values().1 != or_gate.0 {
+                matched.1.values().1
+            } else {
+                unreachable!("Should never be reached")
+            }
+        }));
+
+        let mut wrong_gates = Vec::from_iter(flagged_gates);
+        wrong_gates.sort();
+        Some(wrong_gates.join(",").into())
     }
 }
 
