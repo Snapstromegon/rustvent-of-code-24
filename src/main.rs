@@ -68,7 +68,7 @@ fn main() {
         run_day(day, args.example);
     } else {
         let start = std::time::Instant::now();
-        for day in 1..25 {
+        for day in 1..=25 {
             if get_day(day).is_some() {
                 run_day(day, args.example);
             }

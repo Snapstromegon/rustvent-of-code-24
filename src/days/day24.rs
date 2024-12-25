@@ -253,13 +253,8 @@ mod tests {
     }
 
     #[test]
-    fn test_part2_example() {
-        let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
-    }
-    #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some("gwh,jct,rcb,wbw,wgb,z09,z21,z39".into()));
     }
 }
